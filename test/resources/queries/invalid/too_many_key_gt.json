@@ -1,0 +1,21 @@
+{
+	"title": "GT has too many keys",
+	"input": {
+		"WHERE": {
+			"GT": {
+				"sections_avg": 67,
+				"sections_avg": 41
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_dept",
+				"sections_id",
+				"sections_avg"
+			],
+			"ORDER": "sections_avg"
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}

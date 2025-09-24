@@ -1,0 +1,20 @@
+{
+	"title": "EQ has invalid key type",
+	"input": {
+		"WHERE": {
+			"EQ": {
+				"sections_dept": "cpsc"
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_dept",
+				"sections_id",
+				"sections_avg"
+			],
+			"ORDER": "sections_avg"
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}

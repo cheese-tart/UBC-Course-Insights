@@ -1,0 +1,20 @@
+{
+	"title": "IS has too many keys",
+	"input": {
+		"WHERE": {
+			"IS": {
+				"sections_dept": "cpsc",
+				"sections_instructor": "gregor"
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_dept",
+				"sections_avg"
+			],
+			"ORDER": "sections_avg"
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}

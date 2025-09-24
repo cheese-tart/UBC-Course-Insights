@@ -1,0 +1,25 @@
+{
+	"title": "NOT has too many keys",
+	"input": {
+		"WHERE": {
+			"NOT": {
+				"GT": {
+					"sections_avg": 41
+				},
+				"LT": {
+					"sections_avg": 67
+				}
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_dept",
+				"sections_id",
+				"sections_avg"
+			],
+			"ORDER": "sections_avg"
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}
