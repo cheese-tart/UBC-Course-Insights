@@ -1,4 +1,11 @@
-import { IInsightFacade, InsightDataset, InsightDatasetKind, InsightResult } from "./IInsightFacade";
+import {
+	IInsightFacade,
+	InsightDataset,
+	InsightDatasetKind,
+	InsightResult,
+	InsightError,
+	NotFoundError
+} from "./IInsightFacade";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -6,11 +13,14 @@ import { IInsightFacade, InsightDataset, InsightDatasetKind, InsightResult } fro
  *
  */
 export default class InsightFacade implements IInsightFacade {
+	private static checkId(id: string): boolean {
+		return !id || id.trim() === "" || id.includes("_");
+	}
+
 	public async addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
-		// TODO: Remove this once you implement the methods!
-		throw new Error(
-			`InsightFacadeImpl::addDataset() is unimplemented! - id=${id}; content=${content?.length}; kind=${kind}`
-		);
+		if (InsightFacade.checkId(id) ) {
+			throw new InsightError("Invalid ID dumbass.");
+		}
 	}
 
 	public async removeDataset(id: string): Promise<string> {
