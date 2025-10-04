@@ -1,4 +1,4 @@
-import { InsightDatasetKind } from "./IInsightFacade";
+import {InsightDatasetKind} from "./IInsightFacade";
 
 import fs from "fs-extra";
 
@@ -35,12 +35,37 @@ export default class DatasetPersistence {
 		this.datasets.push(dataset);
 	}
 
-	public async ensurePersistance(): Promise<void> {
+	public async getDatasets(): Promise<Dataset[]> {
+		return this.datasets;
+	}
+
+	public async setDatasets(datasets: Dataset[]): Promise<void> {
+		this.datasets = datasets;
+	}
+
+	public async ensurePersistence(): Promise<void> {
 		try {
 			await fs.ensureDir(directory);
 			await fs.ensureFile(file);
 		} catch (error) {
-			// idk what to do lol
+			console.error('penis');
+		}
+	}
+
+	public async loadData(): Promise<void> {
+		try {
+			const data = await fs.readJson(file);
+			this.datasets = Array.isArray(data) ? data : [];
+		} catch (error) {
+			console.error('penis');
+		}
+	}
+
+	public async saveData(): Promise<void> {
+		try {
+			await fs.writeJson(file, this.datasets);
+		} catch {
+			console.error('penis');
 		}
 	}
 }

@@ -8,10 +8,7 @@ import {
 } from "./IInsightFacade";
 import DatasetPersistence from "./Dataset";
 
-import fs from "fs-extra";
-
-const directory: string = "data";
-const file: string = directory + "/datasets.json";
+import jszip from "jszip";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -23,40 +20,60 @@ export default class InsightFacade implements IInsightFacade {
 
 	constructor() {
 		this.data = new DatasetPersistence();
-		this.data.ensurePersistance();
+	}
+
+	async init(): Promise<void> {
+		await this.data.ensurePersistence();
+		await this.data.loadData();
 	}
 
 	private static checkId(id: string): boolean {
-		return !id || id.trim() === "" || id.includes("_");
+		return !id || id.trim() === '' || id.includes('_');
 	}
 
 	private static checkContent(content: string): boolean {
-		// placeholder
-		if (content != "base-64 string") {
-			return true;
-		} else {
+		if (!content || content.trim() === '') {
 			return false;
 		}
+		if (content.length % 4 !== 0) {
+			return false;
+		}
+		// Taken from https://stackoverflow.com/questions/475074/regex-to-parse-or-validate-base64-data
+		// Used regex found from link above
+		const base64Regex = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/
+		return base64Regex.test(content);
+	}
+
+	private static parseData(content: string): void {
+
 	}
 
 	public async addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
 		if (InsightFacade.checkId(id)) {
 			throw new InsightError('Invalid ID');
 		}
-
 		if (InsightFacade.checkContent(content)) {
 			throw new InsightError('Invalid content');
 		}
+		const datasets = await this.data.getDatasets();
+		if (datasets.some(dataset => dataset.id === id)) {
+			throw new InsightError('Duplicate ID');
+		}
+
+		InsightFacade.parseData(content);
 	}
 
 	public async removeDataset(id: string): Promise<string> {
 		if (InsightFacade.checkId(id)) {
 			throw new InsightError('Invalid ID');
-		// placeholder
-		} else if ("id not found") {
+		}
+		const datasets = await this.data.getDatasets();
+		if (!datasets.some(dataset => dataset.id === id)) {
 			throw new NotFoundError();
 		} else {
-			await fs.remove(file);
+			datasets.filter(dataset => dataset.id !== id);
+			await this.data.setDatasets(datasets);
+			await this.data.saveData();
 			return id;
 		}
 	}
