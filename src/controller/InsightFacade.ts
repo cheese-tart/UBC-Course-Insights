@@ -6,7 +6,7 @@ import {
 	InsightError,
 	NotFoundError
 } from "./IInsightFacade";
-import DatasetPersistence from "./Dataset";
+import { DatasetPersistence, DataProcessor } from "./Dataset";
 
 import jszip from "jszip";
 
@@ -44,10 +44,6 @@ export default class InsightFacade implements IInsightFacade {
 		return base64Regex.test(content);
 	}
 
-	private static parseData(content: string): void {
-
-	}
-
 	public async addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
 		if (InsightFacade.checkId(id)) {
 			throw new InsightError('Invalid ID');
@@ -59,8 +55,6 @@ export default class InsightFacade implements IInsightFacade {
 		if (datasets.some(dataset => dataset.id === id)) {
 			throw new InsightError('Duplicate ID');
 		}
-
-		InsightFacade.parseData(content);
 	}
 
 	public async removeDataset(id: string): Promise<string> {
@@ -84,7 +78,11 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public async listDatasets(): Promise<InsightDataset[]> {
-		// TODO: Remove this once you implement the methods!
-		throw new Error(`InsightFacadeImpl::listDatasets is unimplemented!`);
+		const datasets = await this.data.getDatasets();
+		return datasets.map((ds) => ({
+			id: ds.id,
+			kind: ds.kind,
+			numRows: ds.numRows
+		}));
 	}
 }

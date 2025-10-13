@@ -1,4 +1,4 @@
-import {InsightDatasetKind} from "./IInsightFacade";
+import { InsightDatasetKind, InsightDataset } from "./IInsightFacade";
 
 import fs from "fs-extra";
 
@@ -15,16 +15,18 @@ export interface Section {
 	audit: number;
 }
 
-export interface Dataset {
-	id: string;
-	kind: InsightDatasetKind;
-	content: Section[];
+export interface Room {
+	// i have a fat boner
+}
+
+export interface Dataset extends InsightDataset {
+	content: Section[] | Room[];
 }
 
 const directory: string = "data";
 const file: string = directory + "/datasets.json";
 
-export default class DatasetPersistence {
+export class DatasetPersistence {
 	private datasets: Dataset[];
 
 	constructor() {
@@ -68,4 +70,8 @@ export default class DatasetPersistence {
 			console.error('penis');
 		}
 	}
+}
+
+export class DataProcessor {
+
 }
