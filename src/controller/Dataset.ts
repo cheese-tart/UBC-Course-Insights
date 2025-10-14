@@ -1,7 +1,7 @@
 import { InsightDatasetKind, InsightDataset } from "./IInsightFacade";
 
 import fs from "fs-extra";
-import jszip from "jszip";
+import JSZip from "jszip";
 
 export interface Section {
 	uuid: string;
@@ -50,6 +50,10 @@ export class DatasetPersistence {
 		try {
 			await fs.ensureDir(directory);
 			await fs.ensureFile(file);
+			const stats = await fs.stat(file);
+			if (stats.size === 0) {
+				await fs.writeJson(file, []);
+			}
 		} catch (error) {
 			console.error('penis');
 		}
@@ -57,9 +61,7 @@ export class DatasetPersistence {
 
 	public async loadData(): Promise<void> {
 		try {
-			const data = await fs.readJson(file);
-			// i don't even fucking know if this is gonna bug out but fuck it we ball
-			this.datasets = Array.isArray(data) ? data : [];
+			this.datasets = await fs.readJson(file);
 		} catch (error) {
 			console.error('penis');
 		}
@@ -75,5 +77,8 @@ export class DatasetPersistence {
 }
 
 export class DataProcessor {
-
+	public static unzipData(content: string) {
+		const unzipped = new JSZip();
+		unzipped.loadAsync(content);
+	}
 }
