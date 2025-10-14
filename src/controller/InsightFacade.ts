@@ -6,7 +6,7 @@ import {
 	InsightError,
 	NotFoundError
 } from "./IInsightFacade";
-import { DatasetPersistence, DataProcessor } from "./Dataset";
+import { Dataset, DatasetPersistence, DataProcessor } from "./Dataset";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -49,9 +49,11 @@ export default class InsightFacade implements IInsightFacade {
 		if (InsightFacade.checkContent(content)) {
 			throw new InsightError('Invalid content');
 		}
-		const datasets = this.data.getDatasets();
-		if (datasets.some(dataset => dataset.id === id)) {
-			throw new InsightError('Duplicate ID');
+		const datasets: Dataset[] = this.data.getDatasets();
+		for (const dataset of datasets) {
+			if (dataset.id === id) {
+				throw new InsightError('Duplicate ID');
+			}
 		}
 
 
@@ -61,15 +63,29 @@ export default class InsightFacade implements IInsightFacade {
 		if (InsightFacade.checkId(id)) {
 			throw new InsightError('Invalid ID');
 		}
-		const datasets = this.data.getDatasets();
-		if (!datasets.some(dataset => dataset.id === id)) {
-			throw new NotFoundError();
-		} else {
-			datasets.filter(dataset => dataset.id !== id);
-			this.data.setDatasets(datasets);
-			await this.data.saveData();
-			return id;
+		const datasets: Dataset[] = this.data.getDatasets();
+
+		let found = false;
+		for (const dataset of datasets) {
+			if (dataset.id === id) {
+				found = true;
+				break;
+			}
 		}
+		if (!found) {
+			throw new NotFoundError();
+		}
+
+		const filtered: Dataset[] = [];
+		for (const dataset of datasets) {
+			if (dataset.id !== id) {
+				filtered.push(dataset);
+			}
+		}
+
+		this.data.setDatasets(filtered);
+		await this.data.saveData();
+		return id;
 	}
 
 	public async performQuery(query: unknown): Promise<InsightResult[]> {
@@ -78,10 +94,16 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public async listDatasets(): Promise<InsightDataset[]> {
-		return this.data.getDatasets().map((ds) => ({
-			id: ds.id,
-			kind: ds.kind,
-			numRows: ds.numRows
-		}));
+		const list: InsightDataset[] = [];
+		const datasets: Dataset[] = this.data.getDatasets();
+
+		for (const dataset of datasets) {
+			list.push({
+				id: dataset.id,
+				kind: dataset.kind,
+				numRows: dataset.numRows
+			})
+		}
+		return list;
 	}
 }

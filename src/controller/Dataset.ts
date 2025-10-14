@@ -77,8 +77,17 @@ export class DatasetPersistence {
 }
 
 export class DataProcessor {
-	public static unzipData(content: string) {
+	private static async unzipData(content: string): Promise<JSZip> {
 		const unzipped = new JSZip();
-		unzipped.loadAsync(content);
+		await unzipped.loadAsync(content, { base64: true });
+		return unzipped;
+	}
+
+	public static async extractCourseFiles(unzipped: JSZip) {
+
+	}
+
+	public static async getSections(content: string) {
+		const unzipped = await DataProcessor.unzipData(content);
 	}
 }
