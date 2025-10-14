@@ -8,8 +8,6 @@ import {
 } from "./IInsightFacade";
 import { DatasetPersistence, DataProcessor } from "./Dataset";
 
-import jszip from "jszip";
-
 /**
  * This is the main programmatic entry point for the project.
  * Method documentation is in IInsightFacade
@@ -51,35 +49,36 @@ export default class InsightFacade implements IInsightFacade {
 		if (InsightFacade.checkContent(content)) {
 			throw new InsightError('Invalid content');
 		}
-		const datasets = await this.data.getDatasets();
+		const datasets = this.data.getDatasets();
 		if (datasets.some(dataset => dataset.id === id)) {
 			throw new InsightError('Duplicate ID');
 		}
+
+
 	}
 
 	public async removeDataset(id: string): Promise<string> {
 		if (InsightFacade.checkId(id)) {
 			throw new InsightError('Invalid ID');
 		}
-		const datasets = await this.data.getDatasets();
+		const datasets = this.data.getDatasets();
 		if (!datasets.some(dataset => dataset.id === id)) {
 			throw new NotFoundError();
 		} else {
 			datasets.filter(dataset => dataset.id !== id);
-			await this.data.setDatasets(datasets);
+			this.data.setDatasets(datasets);
 			await this.data.saveData();
 			return id;
 		}
 	}
 
 	public async performQuery(query: unknown): Promise<InsightResult[]> {
-		// TODO: Remove this once you implement the methods!
+		// TODO: tell lucas to go FUCK HIMSELF
 		throw new Error(`InsightFacadeImpl::performQuery() is unimplemented! - query=${query};`);
 	}
 
 	public async listDatasets(): Promise<InsightDataset[]> {
-		const datasets = await this.data.getDatasets();
-		return datasets.map((ds) => ({
+		return this.data.getDatasets().map((ds) => ({
 			id: ds.id,
 			kind: ds.kind,
 			numRows: ds.numRows

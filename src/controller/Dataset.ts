@@ -1,6 +1,7 @@
 import { InsightDatasetKind, InsightDataset } from "./IInsightFacade";
 
 import fs from "fs-extra";
+import jszip from "jszip";
 
 export interface Section {
 	uuid: string;
@@ -33,15 +34,15 @@ export class DatasetPersistence {
 		this.datasets = [];
 	}
 
-	public async addDataset(dataset: Dataset): Promise<void> {
+	public addDataset(dataset: Dataset) {
 		this.datasets.push(dataset);
 	}
 
-	public async getDatasets(): Promise<Dataset[]> {
+	public getDatasets(): Dataset[] {
 		return this.datasets;
 	}
 
-	public async setDatasets(datasets: Dataset[]): Promise<void> {
+	public setDatasets(datasets: Dataset[]) {
 		this.datasets = datasets;
 	}
 
@@ -57,6 +58,7 @@ export class DatasetPersistence {
 	public async loadData(): Promise<void> {
 		try {
 			const data = await fs.readJson(file);
+			// i don't even fucking know if this is gonna bug out but fuck it we ball
 			this.datasets = Array.isArray(data) ? data : [];
 		} catch (error) {
 			console.error('penis');
