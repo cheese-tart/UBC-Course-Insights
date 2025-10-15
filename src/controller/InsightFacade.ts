@@ -56,6 +56,7 @@ export default class InsightFacade implements IInsightFacade {
 			}
 		}
 
+		const sections = DataProcessor.getSections(content);
 
 	}
 

@@ -1,7 +1,7 @@
-import { InsightDatasetKind, InsightDataset } from "./IInsightFacade";
+import {InsightDataset, InsightError} from "./IInsightFacade";
 
 import fs from "fs-extra";
-import JSZip from "jszip";
+import JSZip, { JSZipObject } from "jszip";
 
 export interface Section {
 	uuid: string;
@@ -83,11 +83,55 @@ export class DataProcessor {
 		return unzipped;
 	}
 
-	public static async extractCourseFiles(unzipped: JSZip) {
+	private static extractCourseFiles(unzipped: JSZip): JSZipObject[] {
+		return Object.values(unzipped.files).filter(file => {
+			if (file.dir) return false;
+			if (!file.name.startsWith('courses/')) return false;
+			if (!file.name.endsWith('.json')) return false;
 
+			// check that course file isnt within another folder e.g. courses/lucas_ragebait/cpsc310.json
+			const pathParts = file.name.split('/');
+			return pathParts.length === 2;
+		});
+	}
+
+	private static async processFiles(files: JSZipObject[]): Promise<Section[]> {
+		// stringify JSZip objects and convert string to JS object
+		const unparsed_sections = [];
+		for (const file of files) {
+			const text = await file.async('text');
+			unparsed_sections.push(text);
+		}
+		const parsed_sections = [];
+		for (const section of unparsed_sections) {
+			parsed_sections.push(JSON.parse(section).result);
+		}
+
+		const sections: Section[] = [];
+		for (const section of parsed_sections) {
+			sections.push({
+				uuid: section.id,
+				id: section.Course,
+				title: section.Title,
+				instructor: section.Professor,
+				dept: section.Subject,
+				year: section.Year,
+				avg: section.Avg,
+				pass: section.Pass,
+				fail: section.Fail,
+				audit: section.Audit
+			})
+		}
+
+		if (sections.length === 0) {
+			throw new InsightError('Dataset has no valid sections');
+		}
+		return sections;
 	}
 
 	public static async getSections(content: string) {
 		const unzipped = await DataProcessor.unzipData(content);
+		const files = DataProcessor.extractCourseFiles(unzipped);
+		return await DataProcessor.processFiles(files);
 	}
 }
