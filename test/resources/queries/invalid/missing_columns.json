@@ -1,0 +1,13 @@
+{
+	"title": "Query missing COLUMNS",
+	"input": {
+		"WHERE": {
+			"IS": {
+				"sections_instructor": "kiczales"
+			}
+		},
+		"OPTIONS": {}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}

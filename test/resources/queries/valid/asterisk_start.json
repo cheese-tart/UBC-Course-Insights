@@ -1,0 +1,38 @@
+{
+	"title": "Test asterisk at start of input string",
+	"input": {
+		"WHERE": {
+			"AND": [
+				{
+					"IS": {
+						"sections_dept": "*sc"
+					}
+				},
+				{
+					"GT": {
+						"sections_avg": 95
+					}
+				}
+			]
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_dept",
+				"sections_id",
+				"sections_avg"
+			],
+			"ORDER": "sections_avg"
+		}
+	},
+	"errorExpected": false,
+	"expected": [
+		{"sections_dept":"apsc","sections_id":"279","sections_avg":95.05},
+		{"sections_dept":"musc","sections_id":"506","sections_avg":95.38},
+		{"sections_dept":"musc","sections_id":"506","sections_avg":95.67},
+		{"sections_dept":"apsc","sections_id":"279","sections_avg":95.94},
+		{"sections_dept":"apsc","sections_id":"279","sections_avg":95.95},
+		{"sections_dept":"apsc","sections_id":"279","sections_avg":96},
+		{"sections_dept":"musc","sections_id":"559","sections_avg":96.5},
+		{"sections_dept":"musc","sections_id":"559","sections_avg":96.5}
+	]
+}

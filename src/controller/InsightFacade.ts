@@ -1,4 +1,12 @@
-import { IInsightFacade, InsightDataset, InsightDatasetKind, InsightResult } from "./IInsightFacade";
+import {
+	IInsightFacade,
+	InsightDataset,
+	InsightDatasetKind,
+	InsightResult,
+	InsightError,
+	NotFoundError
+} from "./IInsightFacade";
+import { Section, Dataset, DatasetPersistence, DataProcessor } from "./Dataset";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -6,25 +14,106 @@ import { IInsightFacade, InsightDataset, InsightDatasetKind, InsightResult } fro
  *
  */
 export default class InsightFacade implements IInsightFacade {
+	private data: DatasetPersistence;
+
+	constructor() {
+		this.data = new DatasetPersistence();
+	}
+
+	async init(): Promise<void> {
+		await this.data.ensurePersistence();
+		await this.data.loadData();
+	}
+
+	private static checkId(id: string): boolean {
+		return !id || id.trim() === '' || id.includes('_');
+	}
+
+	private static checkContent(content: string): boolean {
+		if (!content || content.trim() === '') {
+			return false;
+		}
+		if (content.length % 4 !== 0) {
+			return false;
+		}
+		// Taken from https://stackoverflow.com/questions/475074/regex-to-parse-or-validate-base64-data
+		// Used regex found from link above
+		const base64Regex = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/
+		return base64Regex.test(content);
+	}
+
 	public async addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
-		// TODO: Remove this once you implement the methods!
-		throw new Error(
-			`InsightFacadeImpl::addDataset() is unimplemented! - id=${id}; content=${content?.length}; kind=${kind}`
-		);
+		if (InsightFacade.checkId(id)) {
+			throw new InsightError('Invalid ID');
+		}
+		if (InsightFacade.checkContent(content)) {
+			throw new InsightError('Invalid content');
+		}
+		const datasets: Dataset[] = this.data.getDatasets();
+		for (const dataset of datasets) {
+			if (dataset.id === id) {
+				throw new InsightError('Duplicate ID');
+			}
+		}
+
+		const sections: Section[] = await DataProcessor.getSections(content);
+		const dataset: Dataset = { id: id, kind: kind, numRows: sections.length, content: sections }
+		this.data.addDataset(dataset);
+		await this.data.saveData();
+
+		const data = this.data.getDatasets();
+		const ids: string[] = [];
+		for (const d of data) {
+			ids.push(d.id);
+		}
+		return ids;
 	}
 
 	public async removeDataset(id: string): Promise<string> {
-		// TODO: Remove this once you implement the methods!
-		throw new Error(`InsightFacadeImpl::removeDataset() is unimplemented! - id=${id};`);
+		if (InsightFacade.checkId(id)) {
+			throw new InsightError('Invalid ID');
+		}
+		const datasets: Dataset[] = this.data.getDatasets();
+
+		let found = false;
+		for (const dataset of datasets) {
+			if (dataset.id === id) {
+				found = true;
+				break;
+			}
+		}
+		if (!found) {
+			throw new NotFoundError();
+		}
+
+		const filtered: Dataset[] = [];
+		for (const dataset of datasets) {
+			if (dataset.id !== id) {
+				filtered.push(dataset);
+			}
+		}
+
+		this.data.setDatasets(filtered);
+		await this.data.saveData();
+		return id;
 	}
 
 	public async performQuery(query: unknown): Promise<InsightResult[]> {
-		// TODO: Remove this once you implement the methods!
+		// TODO: tell lucas to go FUCK HIMSELF
 		throw new Error(`InsightFacadeImpl::performQuery() is unimplemented! - query=${query};`);
 	}
 
 	public async listDatasets(): Promise<InsightDataset[]> {
-		// TODO: Remove this once you implement the methods!
-		throw new Error(`InsightFacadeImpl::listDatasets is unimplemented!`);
+		const list: InsightDataset[] = [];
+		const datasets: Dataset[] = this.data.getDatasets();
+
+		for (const dataset of datasets) {
+			list.push({
+				id: dataset.id,
+				kind: dataset.kind,
+				numRows: dataset.numRows
+			})
+		}
+		return list;
 	}
 }
