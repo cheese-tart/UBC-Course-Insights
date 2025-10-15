@@ -6,7 +6,7 @@ import {
 	InsightError,
 	NotFoundError
 } from "./IInsightFacade";
-import { Dataset, DatasetPersistence, DataProcessor } from "./Dataset";
+import { Section, Dataset, DatasetPersistence, DataProcessor } from "./Dataset";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -56,8 +56,17 @@ export default class InsightFacade implements IInsightFacade {
 			}
 		}
 
-		const sections = DataProcessor.getSections(content);
+		const sections: Section[] = await DataProcessor.getSections(content);
+		const dataset: Dataset = { id: id, kind: kind, numRows: sections.length, content: sections }
+		this.data.addDataset(dataset);
+		await this.data.saveData();
 
+		const data = this.data.getDatasets();
+		const ids: string[] = [];
+		for (const d of data) {
+			ids.push(d.id);
+		}
+		return ids;
 	}
 
 	public async removeDataset(id: string): Promise<string> {

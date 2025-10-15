@@ -118,7 +118,7 @@ export class DataProcessor {
 				title: section.Title,
 				instructor: section.Professor,
 				dept: section.Subject,
-				year: section.Year,
+				year: section.Section === "overall" ? 1900 : section.Year,
 				avg: section.Avg,
 				pass: section.Pass,
 				fail: section.Fail,
