@@ -95,7 +95,7 @@ export class DataProcessor {
 		});
 	}
 
-	private static async processFiles(files: JSZipObject[]): Promise<Section[]> {
+	private static async processFiles(files: JSZipObject[]): Promise<any[]> {
 		// stringify JSZip objects and convert string to JS object
 		const unparsed_sections = [];
 		for (const file of files) {
@@ -106,7 +106,10 @@ export class DataProcessor {
 		for (const section of unparsed_sections) {
 			parsed_sections.push(JSON.parse(section).result);
 		}
+		return parsed_sections;
+	}
 
+	public static validateSections(parsed_sections: any[]): Section[] {
 		const sections: Section[] = [];
 		for (const section of parsed_sections) {
 			sections.push({
@@ -132,6 +135,7 @@ export class DataProcessor {
 	public static async getSections(content: string) {
 		const unzipped = await DataProcessor.unzipData(content);
 		const files = DataProcessor.extractCourseFiles(unzipped);
-		return await DataProcessor.processFiles(files);
+		const sections = await DataProcessor.processFiles(files);
+		return DataProcessor.validateSections(sections);
 	}
 }
