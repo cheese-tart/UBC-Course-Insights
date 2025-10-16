@@ -40,7 +40,7 @@ export class DatasetPersistence {
 		this.datasets.push(dataset);
 	}
 
-	public async getDatasets(): Promise<Dataset[]> {
+	public getDatasets(): Dataset[] {
 		return this.datasets;
 	}
 
