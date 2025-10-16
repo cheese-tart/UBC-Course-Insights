@@ -20,11 +20,6 @@ export default class InsightFacade implements IInsightFacade {
 		this.data = new DatasetPersistence();
 	}
 
-	async init(): Promise<void> {
-		await this.data.ensurePersistence();
-		await this.data.loadData();
-	}
-
 	private static checkId(id: string): boolean {
 		return !id || id.trim() === '' || id.includes('_');
 	}
@@ -43,6 +38,9 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public async addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
+		await this.data.ensurePersistence();
+		await this.data.loadData();
+
 		if (InsightFacade.checkId(id)) {
 			throw new InsightError('Invalid ID');
 		}
@@ -70,6 +68,9 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public async removeDataset(id: string): Promise<string> {
+		await this.data.ensurePersistence();
+		await this.data.loadData();
+
 		if (InsightFacade.checkId(id)) {
 			throw new InsightError('Invalid ID');
 		}
@@ -104,6 +105,9 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public async listDatasets(): Promise<InsightDataset[]> {
+		await this.data.ensurePersistence();
+		await this.data.loadData();
+
 		const list: InsightDataset[] = [];
 		const datasets: Dataset[] = this.data.getDatasets();
 

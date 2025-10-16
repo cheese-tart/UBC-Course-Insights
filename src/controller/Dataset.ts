@@ -29,9 +29,13 @@ const file: string = directory + "/datasets.json";
 
 export class DatasetPersistence {
 	private datasets: Dataset[];
+	private pathLoaded: boolean;
+	private dataLoaded: boolean;
 
 	constructor() {
 		this.datasets = [];
+		this.pathLoaded = false;
+		this.dataLoaded = false;
 	}
 
 	public addDataset(dataset: Dataset) {
@@ -47,23 +51,29 @@ export class DatasetPersistence {
 	}
 
 	public async ensurePersistence(): Promise<void> {
-		try {
-			await fs.ensureDir(directory);
-			await fs.ensureFile(file);
-			const stats = await fs.stat(file);
-			if (stats.size === 0) {
-				await fs.writeJson(file, []);
+		if (!this.pathLoaded) {
+			try {
+				await fs.ensureDir(directory);
+				await fs.ensureFile(file);
+				const stats = await fs.stat(file);
+				if (stats.size === 0) {
+					await fs.writeJson(file, []);
+				}
+				this.pathLoaded = true;
+			} catch (error) {
+				console.error('penis');
 			}
-		} catch (error) {
-			console.error('penis');
 		}
 	}
 
 	public async loadData(): Promise<void> {
-		try {
-			this.datasets = await fs.readJson(file);
-		} catch (error) {
-			console.error('penis');
+		if (!this.dataLoaded) {
+			try {
+				this.datasets = await fs.readJson(file);
+				this.dataLoaded = true;
+			} catch (error) {
+				console.error('penis');
+			}
 		}
 	}
 
