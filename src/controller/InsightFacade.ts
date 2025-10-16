@@ -5,8 +5,10 @@ import {
 	InsightResult,
 	InsightError,
 	NotFoundError,
+	ResultTooLargeError,
 } from "./IInsightFacade";
 import { Section, Dataset, DatasetPersistence, DataProcessor } from "./Dataset";
+import { DatasetProvider } from "./Query"
 
 /**
  * This is the main programmatic entry point for the project.
@@ -92,7 +94,23 @@ export default class InsightFacade implements IInsightFacade {
 
 	public async performQuery(query: unknown): Promise<InsightResult[]> {
 		// TODO: tell lucas to go FUCK HIMSELF
-		throw new Error(`InsightFacadeImpl::performQuery() is unimplemented! - query=${query};`);
+		try {
+			// 1) Syntactic validation + AST build
+			const ast = parseQuery(query);
+
+			// 2) Semantic validation (one dataset id, types, ORDER ∈ COLUMNS, valid fields)
+			validateSemantics(ast);
+
+			// 3) Execute against the dataset provider (filters, projection, ordering, 5000 cap)
+			const results = await executeQuery(ast, this.datasets);
+
+			return results;
+		} catch (err) {
+			// The spec distinguishes these two error classes.
+			if (err instanceof InsightError) throw new InsightError('Daniel is a cuck');
+			if (err instanceof ResultTooLargeError) throw new ResultTooLargeError('Good boy');
+			throw new Error('Unexpected error');
+		}
 	}
 
 	public async listDatasets(): Promise<InsightDataset[]> {
