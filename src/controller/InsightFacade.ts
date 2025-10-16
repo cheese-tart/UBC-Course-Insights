@@ -4,7 +4,7 @@ import {
 	InsightDatasetKind,
 	InsightResult,
 	InsightError,
-	NotFoundError
+	NotFoundError,
 } from "./IInsightFacade";
 import { Section, Dataset, DatasetPersistence, DataProcessor } from "./Dataset";
 
@@ -22,35 +22,34 @@ export default class InsightFacade implements IInsightFacade {
 
 	// returns true if invalid id
 	private static checkId(id: string): boolean {
-		return !id || id.trim() === '' || id.includes('_');
+		return !id || id.trim() === "" || id.includes("_");
 	}
 
 	// returns true if content is invalid
 	private static checkContent(s: string): boolean {
-		if (!s || s.trim() === '') {
+		if (!s || s.trim() === "") {
 			return true;
 		}
 		return s.length % 4 !== 0;
-
 	}
 
 	public async addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
 		await this.data.loadData();
 
 		if (InsightFacade.checkId(id)) {
-			throw new InsightError('Invalid ID');
+			throw new InsightError("Invalid ID");
 		}
 		if (InsightFacade.checkContent(content)) {
-			throw new InsightError('Invalid content');
+			throw new InsightError("Invalid content");
 		}
 		for (const dataset of this.data.getDatasets()) {
 			if (dataset.id === id) {
-				throw new InsightError('Duplicate ID');
+				throw new InsightError("Duplicate ID");
 			}
 		}
 
 		const sections: Section[] = await DataProcessor.getSections(content);
-		const dataset: Dataset = { id: id, kind: kind, numRows: sections.length, content: sections }
+		const dataset: Dataset = { id: id, kind: kind, numRows: sections.length, content: sections };
 		this.data.addDataset(dataset);
 		await this.data.saveData();
 
@@ -65,7 +64,7 @@ export default class InsightFacade implements IInsightFacade {
 		await this.data.loadData();
 
 		if (InsightFacade.checkId(id)) {
-			throw new InsightError('Invalid ID');
+			throw new InsightError("Invalid ID");
 		}
 
 		let found = false;
@@ -104,8 +103,8 @@ export default class InsightFacade implements IInsightFacade {
 			list.push({
 				id: dataset.id,
 				kind: dataset.kind,
-				numRows: dataset.numRows
-			})
+				numRows: dataset.numRows,
+			});
 			// console.log(dataset);
 		}
 		return list;
