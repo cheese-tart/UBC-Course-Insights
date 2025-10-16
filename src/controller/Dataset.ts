@@ -41,7 +41,6 @@ export class DatasetPersistence {
 	}
 
 	public async getDatasets(): Promise<Dataset[]> {
-		await this.loadData();
 		return this.datasets;
 	}
 
@@ -62,7 +61,7 @@ export class DatasetPersistence {
 		}
 	}
 
-	private async loadData(): Promise<void> {
+	public async loadData(): Promise<void> {
 		await DatasetPersistence.ensurePersistence();
 
 		if (!this.dataLoaded) {
@@ -76,8 +75,6 @@ export class DatasetPersistence {
 	}
 
 	public async saveData(): Promise<void> {
-		await DatasetPersistence.ensurePersistence();
-
 		try {
 			await fs.writeJson(file, this.datasets);
 		} catch {
@@ -89,20 +86,18 @@ export class DatasetPersistence {
 export class DataProcessor {
 	private static async unzipData(content: string): Promise<JSZip> {
 		const unzipped = new JSZip();
-		await unzipped.loadAsync(content, { base64: true });
+		try {
+			await unzipped.loadAsync(content, { base64: true });
+		} catch (error) {
+			throw new InsightError('content is not base64 encoded string');
+		}
 		return unzipped;
 	}
 
 	private static extractCourseFiles(unzipped: JSZip): JSZipObject[] {
-		return Object.values(unzipped.files).filter(file => {
-			if (file.dir) return false;
-			if (!file.name.startsWith('courses/')) return false;
-			if (!file.name.endsWith('.json')) return false;
-
-			// check that course file isnt within another folder e.g. courses/lucas_ragebait/cpsc310.json
-			const pathParts = file.name.split('/');
-			return pathParts.length === 2;
-		});
+		return Object.values(unzipped.files).filter(file =>
+			!file.dir && file.name.startsWith('courses/')
+		);
 	}
 
 	private static async processFiles(files: JSZipObject[]): Promise<any[]> {
