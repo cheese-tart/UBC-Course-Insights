@@ -102,15 +102,22 @@ export class DataProcessor {
 
 	private static async processFiles(files: JSZipObject[]): Promise<any[]> {
 		// stringify JSZip objects and convert string to JS object
-		const unparsed_sections = [];
+		const parsed_sections = [];
 		for (const file of files) {
 			const text = await file.async('text');
-			unparsed_sections.push(text);
-		}
 
-		const parsed_sections = [];
-		for (const section of unparsed_sections) {
-			parsed_sections.push(JSON.parse(section).result);
+			let parsed: any;
+			try {
+				parsed = JSON.parse(text);
+			} catch {
+				continue;
+			}
+			if (!parsed || !Array.isArray(parsed.result)) {
+				continue;
+			}
+			for (const res of parsed.result) {
+				parsed_sections.push(res);
+			}
 		}
 
 		return parsed_sections;
@@ -120,7 +127,7 @@ export class DataProcessor {
 		const sections: Section[] = [];
 		for (const section of parsed_sections) {
 			sections.push({
-				uuid: section.id,
+				uuid: String(section.id),
 				id: section.Course,
 				title: section.Title,
 				instructor: section.Professor,

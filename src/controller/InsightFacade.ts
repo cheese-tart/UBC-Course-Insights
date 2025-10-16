@@ -43,8 +43,7 @@ export default class InsightFacade implements IInsightFacade {
 		if (InsightFacade.checkContent(content)) {
 			throw new InsightError('Invalid content');
 		}
-		const datasets: Dataset[] = this.data.getDatasets();
-		for (const dataset of datasets) {
+		for (const dataset of this.data.getDatasets()) {
 			if (dataset.id === id) {
 				throw new InsightError('Duplicate ID');
 			}
@@ -55,9 +54,8 @@ export default class InsightFacade implements IInsightFacade {
 		this.data.addDataset(dataset);
 		await this.data.saveData();
 
-		const data = this.data.getDatasets();
 		const ids: string[] = [];
-		for (const d of data) {
+		for (const d of this.data.getDatasets()) {
 			ids.push(d.id);
 		}
 		return ids;
@@ -69,10 +67,9 @@ export default class InsightFacade implements IInsightFacade {
 		if (InsightFacade.checkId(id)) {
 			throw new InsightError('Invalid ID');
 		}
-		const datasets: Dataset[] = this.data.getDatasets();
 
 		let found = false;
-		for (const dataset of datasets) {
+		for (const dataset of this.data.getDatasets()) {
 			if (dataset.id === id) {
 				found = true;
 				break;
@@ -83,7 +80,7 @@ export default class InsightFacade implements IInsightFacade {
 		}
 
 		const filtered: Dataset[] = [];
-		for (const dataset of datasets) {
+		for (const dataset of this.data.getDatasets()) {
 			if (dataset.id !== id) {
 				filtered.push(dataset);
 			}
@@ -101,16 +98,15 @@ export default class InsightFacade implements IInsightFacade {
 
 	public async listDatasets(): Promise<InsightDataset[]> {
 		await this.data.loadData();
-
 		const list: InsightDataset[] = [];
-		const datasets: Dataset[] = this.data.getDatasets();
 
-		for (const dataset of datasets) {
+		for (const dataset of this.data.getDatasets()) {
 			list.push({
 				id: dataset.id,
 				kind: dataset.kind,
 				numRows: dataset.numRows
 			})
+			// console.log(dataset);
 		}
 		return list;
 	}

@@ -1,0 +1,15 @@
+{
+	"title": "Test with 2 datasets",
+	"input": {
+		"WHERE": {},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_dept",
+				"ubc_dept"
+			],
+			"ORDER": "sections_title"
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}

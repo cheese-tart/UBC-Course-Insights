@@ -1,0 +1,19 @@
+{
+	"title": "Query with an invalid skey",
+	"input": {
+		"WHERE": {
+			"IS": {
+				"invalid_thing": "ADHD"
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_dept",
+				"sections_avg"
+			],
+			"ORDER": "sections_avg"
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}

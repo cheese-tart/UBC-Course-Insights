@@ -1,0 +1,19 @@
+{
+	"title": "Query with invalid order",
+	"input": {
+		"WHERE": {
+			"GT": {
+				"sections_avg": 90
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_dept",
+				"sections_avg"
+			],
+			"ORDER": "invalid"
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}

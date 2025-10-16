@@ -1,0 +1,349 @@
+{
+	"title": "Test OR with LT and EQ",
+	"input": {
+		"WHERE": {
+			"OR": [
+				{
+					"LT": {
+						"sections_avg": 50
+					}
+				},
+				{
+					"EQ": {
+						"sections_avg": 95
+					}
+				}
+			]
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_uuid",
+				"sections_avg"
+			],
+			"ORDER": "sections_avg"
+		}
+	},
+	"errorExpected": false,
+	"expected": [
+		{
+			"sections_uuid": "56403",
+			"sections_avg": 0
+		},
+		{
+			"sections_uuid": "56402",
+			"sections_avg": 0
+		},
+		{
+			"sections_uuid": "89536",
+			"sections_avg": 0
+		},
+		{
+			"sections_uuid": "49835",
+			"sections_avg": 1
+		},
+		{
+			"sections_uuid": "16428",
+			"sections_avg": 4
+		},
+		{
+			"sections_uuid": "16427",
+			"sections_avg": 4
+		},
+		{
+			"sections_uuid": "84769",
+			"sections_avg": 4.5
+		},
+		{
+			"sections_uuid": "53284",
+			"sections_avg": 33
+		},
+		{
+			"sections_uuid": "51675",
+			"sections_avg": 33.2
+		},
+		{
+			"sections_uuid": "14375",
+			"sections_avg": 34
+		},
+		{
+			"sections_uuid": "50478",
+			"sections_avg": 39.03
+		},
+		{
+			"sections_uuid": "50477",
+			"sections_avg": 39.03
+		},
+		{
+			"sections_uuid": "12988",
+			"sections_avg": 42
+		},
+		{
+			"sections_uuid": "89306",
+			"sections_avg": 42.5
+		},
+		{
+			"sections_uuid": "71038",
+			"sections_avg": 42.64
+		},
+		{
+			"sections_uuid": "71037",
+			"sections_avg": 42.64
+		},
+		{
+			"sections_uuid": "78618",
+			"sections_avg": 43.33
+		},
+		{
+			"sections_uuid": "12989",
+			"sections_avg": 44.88
+		},
+		{
+			"sections_uuid": "17601",
+			"sections_avg": 46.33
+		},
+		{
+			"sections_uuid": "17600",
+			"sections_avg": 46.33
+		},
+		{
+			"sections_uuid": "74218",
+			"sections_avg": 46.5
+		},
+		{
+			"sections_uuid": "29776",
+			"sections_avg": 46.52
+		},
+		{
+			"sections_uuid": "51393",
+			"sections_avg": 46.59
+		},
+		{
+			"sections_uuid": "7761",
+			"sections_avg": 46.71
+		},
+		{
+			"sections_uuid": "11181",
+			"sections_avg": 46.95
+		},
+		{
+			"sections_uuid": "14377",
+			"sections_avg": 47.13
+		},
+		{
+			"sections_uuid": "92651",
+			"sections_avg": 47.29
+		},
+		{
+			"sections_uuid": "92655",
+			"sections_avg": 47.82
+		},
+		{
+			"sections_uuid": "12062",
+			"sections_avg": 48.9
+		},
+		{
+			"sections_uuid": "7763",
+			"sections_avg": 49.07
+		},
+		{
+			"sections_uuid": "89544",
+			"sections_avg": 49.14
+		},
+		{
+			"sections_uuid": "14376",
+			"sections_avg": 49.15
+		},
+		{
+			"sections_uuid": "11126",
+			"sections_avg": 49.17
+		},
+		{
+			"sections_uuid": "79563",
+			"sections_avg": 49.25
+		},
+		{
+			"sections_uuid": "79793",
+			"sections_avg": 49.47
+		},
+		{
+			"sections_uuid": "79792",
+			"sections_avg": 49.47
+		},
+		{
+			"sections_uuid": "12066",
+			"sections_avg": 49.73
+		},
+		{
+			"sections_uuid": "12069",
+			"sections_avg": 49.86
+		},
+		{
+			"sections_uuid": "29777",
+			"sections_avg": 49.95
+		},
+		{
+			"sections_uuid": "88881",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "10582",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "94901",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "94900",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "98843",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "96196",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "96195",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "93964",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "93963",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "28878",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "28877",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "19491",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "19490",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "2676",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "49774",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "49773",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "29972",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "29971",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "86831",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "59530",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "72706",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "86975",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "86974",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "76362",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "16691",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "16690",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "10017",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "10016",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "92881",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "81354",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "75158",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "71171",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "46407",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "46406",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "26257",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "1386",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "1385",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "28350",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "28349",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "43502",
+			"sections_avg": 95
+		},
+		{
+			"sections_uuid": "43501",
+			"sections_avg": 95
+		}
+	]
+}

@@ -1,0 +1,28 @@
+{
+	"title": "Test AND with GT and EQ (invalid interval)",
+	"input": {
+		"WHERE": {
+			"AND": [
+				{
+					"GT": {
+						"sections_avg": 80
+					}
+				},
+				{
+					"EQ": {
+						"sections_avg": 79
+					}
+				}
+			]
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_uuid",
+				"sections_avg"
+			],
+			"ORDER": "sections_avg"
+		}
+	},
+	"errorExpected": false,
+	"expected": []
+}
