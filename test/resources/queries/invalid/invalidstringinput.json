@@ -1,0 +1,6 @@
+{
+  "title": "Query with invalid input",
+  "input": "bloop :p",
+  "errorExpected": true,
+  "expected" : "InsightError"
+}

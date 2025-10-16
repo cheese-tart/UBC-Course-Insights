@@ -1,0 +1,226 @@
+{
+	"title": "Test EQ",
+	"input": {
+		"WHERE": {
+			"EQ": {
+				"sections_avg": 95
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_dept",
+				"sections_title",
+				"sections_avg"
+			],
+			"ORDER": "sections_avg"
+		}
+	},
+	"errorExpected": false,
+	"expected": [
+		{
+			"sections_dept": "sowk",
+			"sections_title": "directed study",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "rhsc",
+			"sections_title": "eval src evidenc",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "psyc",
+			"sections_title": "health psych",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "psyc",
+			"sections_title": "health psych",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "obst",
+			"sections_title": "msc thesis",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "nurs",
+			"sections_title": "mntl hlth concrn",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "nurs",
+			"sections_title": "mntl hlth concrn",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "musc",
+			"sections_title": "ubc singers",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "musc",
+			"sections_title": "ubc singers",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "musc",
+			"sections_title": "ubc singers",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "musc",
+			"sections_title": "ubc singers",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "musc",
+			"sections_title": "ubc singers",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "musc",
+			"sections_title": "ubc singers",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "mtrl",
+			"sections_title": "masters thesis",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "mtrl",
+			"sections_title": "hydrmtllgcl rctr",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "mtrl",
+			"sections_title": "hydrmtllgcl rctr",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "math",
+			"sections_title": "algb geometry i",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "math",
+			"sections_title": "algb geometry i",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "kin",
+			"sections_title": "spec tpcs kin",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "kin",
+			"sections_title": "spec tpcs kin",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "kin",
+			"sections_title": "kin project",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "epse",
+			"sections_title": "mult des anal rs",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "epse",
+			"sections_title": "mult des anal rs",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "epse",
+			"sections_title": "coll&uni teachng",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "edcp",
+			"sections_title": "ict educ ethics",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "edcp",
+			"sections_title": "ict educ ethics",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "econ",
+			"sections_title": "spc tpcs macroec",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "econ",
+			"sections_title": "spc tpcs macroec",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "crwr",
+			"sections_title": "thesis",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "crwr",
+			"sections_title": "thesis",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "crwr",
+			"sections_title": "thesis",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "crwr",
+			"sections_title": "thesis",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "crwr",
+			"sections_title": "thesis",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "crwr",
+			"sections_title": "thesis",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "crwr",
+			"sections_title": "thesis",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_title": "m.sc major essay",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "cpsc",
+			"sections_title": "m.sc major essay",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "cnps",
+			"sections_title": "adlt psychpathlg",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "cnps",
+			"sections_title": "adlt psychpathlg",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "bmeg",
+			"sections_title": "master eng proj",
+			"sections_avg": 95
+		},
+		{
+			"sections_dept": "bmeg",
+			"sections_title": "master eng proj",
+			"sections_avg": 95
+		}
+	]
+}

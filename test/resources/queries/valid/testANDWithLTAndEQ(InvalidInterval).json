@@ -1,0 +1,28 @@
+{
+	"title": "Test AND with LT and EQ (invalid interval)",
+	"input": {
+		"WHERE": {
+			"AND": [
+				{
+					"LT": {
+						"sections_avg": 80
+					}
+				},
+				{
+					"EQ": {
+						"sections_avg": 81
+					}
+				}
+			]
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_uuid",
+				"sections_avg"
+			],
+			"ORDER": "sections_avg"
+		}
+	},
+	"errorExpected": false,
+	"expected": []
+}

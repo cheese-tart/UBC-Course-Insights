@@ -1,0 +1,13 @@
+{
+  "title" : "Query with missing COLUMNS",
+  "input" : {
+    "WHERE" : {
+      "LT" : {
+        "sections_avg" : 95
+      }
+    },
+    "OPTIONS" : {}    
+  },
+  "errorExpected" : true,
+  "expected" : "InsightError"
+}

@@ -1,0 +1,30 @@
+{
+	"title": "Invalid key with underscore",
+	"input": {
+		"WHERE": {
+			"NOT": {
+				"OR": [
+					{
+						"GT": {
+							"_sections_avg": 50
+						}
+					},
+					{
+						"IS": {
+							"sections_dept": "cpsc"
+						}
+					}
+				]
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_dept",
+				"sections_avg"
+			],
+			"ORDER": "sections_dept"
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}
