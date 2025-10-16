@@ -503,8 +503,8 @@ describe("InsightFacade", function () {
 			if (!this.test) {
 				throw new Error(
 					"Invalid call to checkQuery." +
-					"Usage: 'checkQuery' must be passed as the second parameter of Mocha's it(..) function." +
-					"Do not invoke the function directly."
+						"Usage: 'checkQuery' must be passed as the second parameter of Mocha's it(..) function." +
+						"Do not invoke the function directly."
 				);
 			}
 			// Destructuring assignment to reduce property accesses
@@ -527,7 +527,7 @@ describe("InsightFacade", function () {
 				} else if (expected === "ResultTooLargeError") {
 					expect(err).to.be.instanceOf(ResultTooLargeError);
 				} else {
-					expect.fail('Unexpected error');
+					expect.fail("Unexpected error");
 				}
 			}
 		}
@@ -584,7 +584,7 @@ describe("InsightFacade", function () {
 		it("[valid/testLT.json] Test LT", checkQuery);
 		it("[valid/testNOT.json] Test NOT", checkQuery);
 		it("[valid/testOR.json] Test OR", checkQuery);
-		it("[valid/complexQuery.json] Test complex query", checkQuery);
+		it("[valid/complexquery.json] Test complex query", checkQuery);
 		it("[valid/testANDWithGTAndEQ(InvalidInterval).json] Test and + gt + eq (no results)", checkQuery);
 		it("[valid/testANDWithGTAndEQ(ValidInterval).json] Test and + gt + eq", checkQuery);
 		it("[valid/testANDWithGTAndLT(InvalidInterval).json] Test and + gt + lt (no results)", checkQuery);

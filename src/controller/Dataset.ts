@@ -1,4 +1,4 @@
-import {InsightDataset, InsightError} from "./IInsightFacade";
+import { InsightDataset, InsightError } from "./IInsightFacade";
 
 import fs from "fs-extra";
 import JSZip, { JSZipObject } from "jszip";
@@ -57,7 +57,7 @@ export class DatasetPersistence {
 				await fs.writeJson(file, []);
 			}
 		} catch (error) {
-			console.error('penis');
+			console.error("penis");
 		}
 	}
 
@@ -69,7 +69,7 @@ export class DatasetPersistence {
 				this.datasets = await fs.readJson(file);
 				this.dataLoaded = true;
 			} catch (error) {
-				console.error('penis');
+				console.error("penis");
 			}
 		}
 	}
@@ -78,7 +78,7 @@ export class DatasetPersistence {
 		try {
 			await fs.writeJson(file, this.datasets);
 		} catch {
-			console.error('penis');
+			console.error("penis");
 		}
 	}
 }
@@ -89,22 +89,20 @@ export class DataProcessor {
 		try {
 			await unzipped.loadAsync(content, { base64: true });
 		} catch (error) {
-			throw new InsightError('content is not base64 encoded string');
+			throw new InsightError("content is not base64 encoded string");
 		}
 		return unzipped;
 	}
 
 	private static extractCourseFiles(unzipped: JSZip): JSZipObject[] {
-		return Object.values(unzipped.files).filter(file =>
-			!file.dir && file.name.startsWith('courses/')
-		);
+		return Object.values(unzipped.files).filter((file) => !file.dir && file.name.startsWith("courses/"));
 	}
 
 	private static async processFiles(files: JSZipObject[]): Promise<any[]> {
 		// stringify JSZip objects and convert string to JS object
 		const parsed_sections = [];
 		for (const file of files) {
-			const text = await file.async('text');
+			const text = await file.async("text");
 
 			let parsed: any;
 			try {
@@ -136,12 +134,12 @@ export class DataProcessor {
 				avg: section.Avg,
 				pass: section.Pass,
 				fail: section.Fail,
-				audit: section.Audit
-			})
+				audit: section.Audit,
+			});
 		}
 
 		if (sections.length === 0) {
-			throw new InsightError('Dataset has no valid sections');
+			throw new InsightError("Dataset has no valid sections");
 		}
 		return sections;
 	}
