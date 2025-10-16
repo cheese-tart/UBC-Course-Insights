@@ -29,12 +29,10 @@ const file: string = directory + "/datasets.json";
 
 export class DatasetPersistence {
 	private datasets: Dataset[];
-	private pathLoaded: boolean;
 	private dataLoaded: boolean;
 
 	constructor() {
 		this.datasets = [];
-		this.pathLoaded = false;
 		this.dataLoaded = false;
 	}
 
@@ -42,7 +40,8 @@ export class DatasetPersistence {
 		this.datasets.push(dataset);
 	}
 
-	public getDatasets(): Dataset[] {
+	public async getDatasets(): Promise<Dataset[]> {
+		await this.loadData();
 		return this.datasets;
 	}
 
@@ -50,23 +49,22 @@ export class DatasetPersistence {
 		this.datasets = datasets;
 	}
 
-	public async ensurePersistence(): Promise<void> {
-		if (!this.pathLoaded) {
-			try {
-				await fs.ensureDir(directory);
-				await fs.ensureFile(file);
-				const stats = await fs.stat(file);
-				if (stats.size === 0) {
-					await fs.writeJson(file, []);
-				}
-				this.pathLoaded = true;
-			} catch (error) {
-				console.error('penis');
+	private static async ensurePersistence(): Promise<void> {
+		try {
+			await fs.ensureDir(directory);
+			await fs.ensureFile(file);
+			const stats = await fs.stat(file);
+			if (stats.size === 0) {
+				await fs.writeJson(file, []);
 			}
+		} catch (error) {
+			console.error('penis');
 		}
 	}
 
-	public async loadData(): Promise<void> {
+	private async loadData(): Promise<void> {
+		await DatasetPersistence.ensurePersistence();
+
 		if (!this.dataLoaded) {
 			try {
 				this.datasets = await fs.readJson(file);
@@ -78,6 +76,8 @@ export class DatasetPersistence {
 	}
 
 	public async saveData(): Promise<void> {
+		await DatasetPersistence.ensurePersistence();
+
 		try {
 			await fs.writeJson(file, this.datasets);
 		} catch {
@@ -112,10 +112,12 @@ export class DataProcessor {
 			const text = await file.async('text');
 			unparsed_sections.push(text);
 		}
+
 		const parsed_sections = [];
 		for (const section of unparsed_sections) {
 			parsed_sections.push(JSON.parse(section).result);
 		}
+
 		return parsed_sections;
 	}
 

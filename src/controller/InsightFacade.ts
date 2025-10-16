@@ -20,10 +20,12 @@ export default class InsightFacade implements IInsightFacade {
 		this.data = new DatasetPersistence();
 	}
 
+	// returns true if invalid id
 	private static checkId(id: string): boolean {
 		return !id || id.trim() === '' || id.includes('_');
 	}
 
+	// returns false if content ISNT base64 im so fucking dumb
 	private static checkContent(content: string): boolean {
 		if (!content || content.trim() === '') {
 			return false;
@@ -38,16 +40,13 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public async addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
-		await this.data.ensurePersistence();
-		await this.data.loadData();
-
 		if (InsightFacade.checkId(id)) {
 			throw new InsightError('Invalid ID');
 		}
-		if (InsightFacade.checkContent(content)) {
+		if (!InsightFacade.checkContent(content)) {
 			throw new InsightError('Invalid content');
 		}
-		const datasets: Dataset[] = this.data.getDatasets();
+		const datasets: Dataset[] = await this.data.getDatasets();
 		for (const dataset of datasets) {
 			if (dataset.id === id) {
 				throw new InsightError('Duplicate ID');
@@ -59,7 +58,7 @@ export default class InsightFacade implements IInsightFacade {
 		this.data.addDataset(dataset);
 		await this.data.saveData();
 
-		const data = this.data.getDatasets();
+		const data = await this.data.getDatasets();
 		const ids: string[] = [];
 		for (const d of data) {
 			ids.push(d.id);
@@ -68,13 +67,10 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public async removeDataset(id: string): Promise<string> {
-		await this.data.ensurePersistence();
-		await this.data.loadData();
-
 		if (InsightFacade.checkId(id)) {
 			throw new InsightError('Invalid ID');
 		}
-		const datasets: Dataset[] = this.data.getDatasets();
+		const datasets: Dataset[] = await this.data.getDatasets();
 
 		let found = false;
 		for (const dataset of datasets) {
@@ -105,11 +101,8 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public async listDatasets(): Promise<InsightDataset[]> {
-		await this.data.ensurePersistence();
-		await this.data.loadData();
-
 		const list: InsightDataset[] = [];
-		const datasets: Dataset[] = this.data.getDatasets();
+		const datasets: Dataset[] = await this.data.getDatasets();
 
 		for (const dataset of datasets) {
 			list.push({
