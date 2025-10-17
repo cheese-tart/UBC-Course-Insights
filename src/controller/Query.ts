@@ -1,7 +1,6 @@
-import { InsightResult,InsightError, ResultTooLargeError } from "./IInsightFacade";
-import { Dataset } from "./Dataset";
-
-export class QueryEngine {
+import { InsightResult, InsightError, ResultTooLargeError } from "./IInsightFacade";
+import { Dataset, DatasetPersistence } from "./Dataset";
+import { Section } from "./Dataset";
 // CPSC310 Query Engine Skeleton
 // ------------------------------------------------------------
 // This is a minimal, testable skeleton you can drop into your project
@@ -9,15 +8,9 @@ export class QueryEngine {
 // to adapt to your codebase (types, dataset access, error classes).
 // ------------------------------------------------------------
 
-// If you already have a Dataset model, adapt this facade so executor can read rows.
-export interface DatasetProvider {
-	// Return all rows for a dataset id. Throw InsightError if not present.
-	getSectionsById(datasetId: string): Promise<SectionRecord[]>;
-}
-
 // ========================= constants.ts =========================
 export const NUMERIC_FIELDS = new Set(["avg", "pass", "fail", "audit", "year"]);
-export const STRING_FIELDS  = new Set(["dept", "id", "instructor", "title", "uuid"]);
+export const STRING_FIELDS = new Set(["dept", "id", "instructor", "title", "uuid"]);
 
 // ========================= utils.ts =========================
 export function isObject(x: unknown): x is Record<string, unknown> {
@@ -56,8 +49,8 @@ export function wildcardMatch(value: string, pattern: string): boolean {
 export type QueryAST = {
 	type: "QUERY";
 	where: FilterAST | { type: "EMPTY" };
-	columns: string[];     // fully qualified keys
-	order?: string;        // optional, must be in columns
+	columns: string[]; // fully qualified keys
+	order?: string; // optional, must be in columns
 };
 
 export type FilterAST =
@@ -209,15 +202,17 @@ function walkFilter(node: FilterAST | { type: "EMPTY" }, f: (n: FilterAST) => vo
 }
 
 // ========================= executor.ts =========================
-export async function executeQuery(ast: QueryAST, datasets: DatasetProvider): Promise<InsightResult[]> {
+export async function executeQuery(ast: QueryAST, datasets: DatasetPersistence): Promise<InsightResult[]> {
 	const datasetId = getDatasetAndField(ast.columns[0]).dataset; // safe after validateSemantics
+
+	// have to implement getSectionsById()
 	const rows = await datasets.getSectionsById(datasetId);
 
 	// 1) Filter
-	const filtered = rows.filter((r) => evalFilter(ast.where, r, datasetId));
+	const filtered = rows.filter((r: any) => evalFilter(ast.where, r, datasetId));
 
 	// 2) Project to columns
-	const projected: InsightResult[] = filtered.map((r) => {
+	const projected: InsightResult[] = filtered.map((r: { [x: string]: any }) => {
 		const out: InsightResult = {};
 		for (const key of ast.columns) {
 			const { field } = getDatasetAndField(key);
@@ -230,12 +225,12 @@ export async function executeQuery(ast: QueryAST, datasets: DatasetProvider): Pr
 	// 3) Order
 	if (ast.order) {
 		const orderKey = ast.order;
-		projected.sort((a, b) => {
-			const va = a[orderKey] as any;
-			const vb = b[orderKey] as any;
-			if (typeof va === "number" && typeof vb === "number") return va - vb;
-			return String(va).localeCompare(String(vb));
-		});
+		projected.sort((a, b) => compareValues(a[orderKey], b[orderKey]));
+	}
+
+	function compareValues(x: any, y: any): number {
+		if (typeof x === "number" && typeof y === "number") return x - y;
+		return String(x).localeCompare(String(y));
 	}
 
 	// 4) Size limit
@@ -244,20 +239,27 @@ export async function executeQuery(ast: QueryAST, datasets: DatasetProvider): Pr
 	return projected;
 }
 
-function evalFilter(node: FilterAST | { type: "EMPTY" }, row: SectionRecord, datasetId: string): boolean {
+function evalFilter(node: FilterAST | { type: "EMPTY" }, row: Section, datasetId: string): boolean {
 	if (node.type === "EMPTY") return true;
 	switch (node.type) {
-		case "AND": return node.children.every((c) => evalFilter(c, row, datasetId));
-		case "OR":  return node.children.some((c) => evalFilter(c, row, datasetId));
-		case "NOT": return !evalFilter(node.child, row, datasetId);
-		case "LT":  return compareNumeric(node, row);
-		case "GT":  return compareNumeric(node, row);
-		case "EQ":  return compareNumeric(node, row);
-		case "IS":  return compareString(node, row);
+		case "AND":
+			return node.children.every((c) => evalFilter(c, row, datasetId));
+		case "OR":
+			return node.children.some((c) => evalFilter(c, row, datasetId));
+		case "NOT":
+			return !evalFilter(node.child, row, datasetId);
+		case "LT":
+			return compareNumeric(node, row);
+		case "GT":
+			return compareNumeric(node, row);
+		case "EQ":
+			return compareNumeric(node, row);
+		case "IS":
+			return compareString(node, row);
 	}
 }
 
-function compareNumeric(node: Extract<FilterAST, { type: "LT" | "GT" | "EQ" }>, row: SectionRecord): boolean {
+function compareNumeric(node: Extract<FilterAST, { type: "LT" | "GT" | "EQ" }>, row: Section): boolean {
 	const { field } = getDatasetAndField(node.key);
 	const actual = (row as any)[field];
 	if (typeof actual !== "number") throw new InsightError(`Field ${field} is not numeric`);
@@ -266,44 +268,11 @@ function compareNumeric(node: Extract<FilterAST, { type: "LT" | "GT" | "EQ" }>, 
 	return actual === node.value; // EQ
 }
 
-function compareString(node: Extract<FilterAST, { type: "IS" }>, row: SectionRecord): boolean {
+function compareString(node: Extract<FilterAST, { type: "IS" }>, row: Section): boolean {
 	const { field } = getDatasetAndField(node.key);
 	const actual = (row as any)[field];
 	if (typeof actual !== "string") throw new InsightError(`Field ${field} is not string`);
 	return wildcardMatch(actual, node.pattern);
-}
-
-// ========================= InsightFacade.performQuery =========================
-// Wire this into your actual class that implements IInsightFacade.
-export class InsightFacade {
-	constructor(private datasets: DatasetProvider) {}
-
-	public async performQuery(query: unknown): Promise<InsightResult[]> {
-		// 1) Parse to AST (syntactic validation)
-		const ast = parseQuery(query);
-
-		// 2) Semantic validation
-		validateSemantics(ast);
-
-		// 3) Execute
-		const results = await executeQuery(ast, this.datasets);
-
-		return results;
-	}
-}
-
-// ========================= Example DatasetProvider impl =========================
-// Replace this with your real persistence layer.
-export class InMemoryDatasetProvider implements DatasetProvider {
-	private sectionsById = new Map<string, SectionRecord[]>();
-
-	add(id: string, rows: SectionRecord[]) { this.sectionsById.set(id, rows); }
-
-	async getSectionsById(datasetId: string): Promise<SectionRecord[]> {
-		const rows = this.sectionsById.get(datasetId);
-		if (!rows) throw new InsightError(`Dataset '${datasetId}' not found`);
-		return rows;
-	}
 }
 
 // ========================= Notes =========================
@@ -311,5 +280,3 @@ export class InMemoryDatasetProvider implements DatasetProvider {
 // • It recognizes: AND, OR, NOT, LT, GT, EQ, IS with prefix/suffix/contains wildcards (no middle asterisk).
 // • Extend SectionRecord or create a RoomRecord if you later support rooms. The numeric/string field sets must be adjusted accordingly.
 // • If your project splits by dataset kind, consider routing to a specific executor per kind.
-
-}

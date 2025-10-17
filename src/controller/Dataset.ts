@@ -21,7 +21,7 @@ export interface Room {
 }
 
 export interface Dataset extends InsightDataset {
-	content: Section[] | Room[];
+	content: Section[];
 }
 
 const directory: string = "data";
@@ -81,6 +81,16 @@ export class DatasetPersistence {
 			console.error("penis");
 		}
 	}
+
+	public async getSectionsById(id: string): Promise<Section[]> {
+		await this.loadData();
+		for (const dataset of this.datasets) {
+			if (dataset.id === id) {
+				return dataset.content;
+			}
+		}
+		throw new InsightError(`Dataset with id '${id}' not found`);
+	}
 }
 
 export class DataProcessor {
@@ -121,8 +131,8 @@ export class DataProcessor {
 		return parsed_sections;
 	}
 
-	public static validateSections(parsed_sections: any[]): Section[] {
-		const sections: Section[] = [];
+	public static validateSections(parsed_sections: any[]): any[] {
+		const sections: any[] = [];
 		for (const section of parsed_sections) {
 			sections.push({
 				uuid: String(section.id),

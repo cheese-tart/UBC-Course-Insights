@@ -8,8 +8,7 @@ import {
 	ResultTooLargeError,
 } from "./IInsightFacade";
 import { Section, Dataset, DatasetPersistence, DataProcessor } from "./Dataset";
-import { DatasetProvider } from "./Query"
-
+import { validateSemantics, executeQuery, parseQuery } from "./Query";
 /**
  * This is the main programmatic entry point for the project.
  * Method documentation is in IInsightFacade
@@ -102,14 +101,13 @@ export default class InsightFacade implements IInsightFacade {
 			validateSemantics(ast);
 
 			// 3) Execute against the dataset provider (filters, projection, ordering, 5000 cap)
-			const results = await executeQuery(ast, this.datasets);
+			const results = await executeQuery(ast, this.data);
 
 			return results;
 		} catch (err) {
-			// The spec distinguishes these two error classes.
-			if (err instanceof InsightError) throw new InsightError('Daniel is a cuck');
-			if (err instanceof ResultTooLargeError) throw new ResultTooLargeError('Good boy');
-			throw new Error('Unexpected error');
+			if (err instanceof InsightError) throw err;
+			if (err instanceof ResultTooLargeError) throw err;
+			throw new Error("Unexpected error");
 		}
 	}
 
@@ -123,7 +121,6 @@ export default class InsightFacade implements IInsightFacade {
 				kind: dataset.kind,
 				numRows: dataset.numRows,
 			});
-			// console.log(dataset);
 		}
 		return list;
 	}
