@@ -197,8 +197,7 @@ export async function executeQuery(ast: QueryAST, datasets: DatasetPersistence):
 		const out: InsightResult = {};
 		for (const key of ast.columns) {
 			const { field } = getDatasetAndField(key);
-			// @ts-ignore – fields line up with SectionRecord
-			out[key] = r[field as keyof SectionRecord] as any;
+			out[key] = r[field as keyof Section] as any;
 		}
 		return out;
 	});
