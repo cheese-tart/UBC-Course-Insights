@@ -92,18 +92,10 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public async performQuery(query: unknown): Promise<InsightResult[]> {
-		// TODO: tell lucas to go FUCK HIMSELF
 		try {
-			// 1) Syntactic validation + AST build
 			const ast = parseQuery(query);
-
-			// 2) Semantic validation (one dataset id, types, ORDER ∈ COLUMNS, valid fields)
 			validateSemantics(ast);
-
-			// 3) Execute against the dataset provider (filters, projection, ordering, 5000 cap)
-			const results = await executeQuery(ast, this.data);
-
-			return results;
+			return await executeQuery(ast, this.data);
 		} catch (err) {
 			if (err instanceof InsightError) throw err;
 			if (err instanceof ResultTooLargeError) throw err;
