@@ -30,7 +30,10 @@ export function getDatasetAndField(key: string): { dataset: string; field: strin
 }
 
 export function wildcardMatch(value: string, pattern: string): boolean {
-	// pattern may be: literal | *literal | literal* | *literal*
+	// pattern may be: literal | *literal | literal* | *literal* | *
+	if (pattern === "*" || pattern === "**") {
+		return true;
+	}
 	const starts = pattern.startsWith("*");
 	const ends = pattern.endsWith("*");
 	const core = pattern.substring(starts ? 1 : 0, ends ? pattern.length - 1 : pattern.length);
