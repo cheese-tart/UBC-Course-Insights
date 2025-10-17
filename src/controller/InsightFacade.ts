@@ -5,9 +5,10 @@ import {
 	InsightResult,
 	InsightError,
 	NotFoundError,
+	ResultTooLargeError,
 } from "./IInsightFacade";
 import { Section, Dataset, DatasetPersistence, DataProcessor } from "./Dataset";
-
+import { validateSemantics, executeQuery, parseQuery } from "./Query";
 /**
  * This is the main programmatic entry point for the project.
  * Method documentation is in IInsightFacade
@@ -92,7 +93,22 @@ export default class InsightFacade implements IInsightFacade {
 
 	public async performQuery(query: unknown): Promise<InsightResult[]> {
 		// TODO: tell lucas to go FUCK HIMSELF
-		throw new Error(`InsightFacadeImpl::performQuery() is unimplemented! - query=${query};`);
+		try {
+			// 1) Syntactic validation + AST build
+			const ast = parseQuery(query);
+
+			// 2) Semantic validation (one dataset id, types, ORDER ∈ COLUMNS, valid fields)
+			validateSemantics(ast);
+
+			// 3) Execute against the dataset provider (filters, projection, ordering, 5000 cap)
+			const results = await executeQuery(ast, this.data);
+
+			return results;
+		} catch (err) {
+			if (err instanceof InsightError) throw err;
+			if (err instanceof ResultTooLargeError) throw err;
+			throw new Error("Unexpected error");
+		}
 	}
 
 	public async listDatasets(): Promise<InsightDataset[]> {
@@ -105,7 +121,6 @@ export default class InsightFacade implements IInsightFacade {
 				kind: dataset.kind,
 				numRows: dataset.numRows,
 			});
-			// console.log(dataset);
 		}
 		return list;
 	}

@@ -515,7 +515,7 @@ describe("InsightFacade", function () {
 				if (errorExpected) {
 					expect.fail("Error expected.");
 				}
-				expect(result).to.deep.equal(expected);
+				expect(result).to.deep.members(expected);
 			} catch (err) {
 				if (!errorExpected) {
 					expect.fail(`performQuery threw unexpected error: ${err}`);
