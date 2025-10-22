@@ -2,6 +2,7 @@ import { InsightDataset, InsightError } from "./IInsightFacade";
 
 import fs from "fs-extra";
 import JSZip, { JSZipObject } from "jszip";
+import parse5 from "parse5";
 
 export interface Section {
 	uuid: string;
@@ -17,11 +18,21 @@ export interface Section {
 }
 
 export interface Room {
-	// i have a fat boner
+	fullname: string;
+	shortname: string;
+	number: string;
+	name: string;
+	address: string;
+	lat: number;
+	lon: number;
+	seats: number;
+	type: string;
+	furniture: string;
+	href: string;
 }
 
 export interface Dataset extends InsightDataset {
-	content: Section[];
+	content: any[];
 }
 
 const directory: string = "data";
@@ -108,7 +119,7 @@ export class DataProcessor {
 		return Object.values(unzipped.files).filter((file) => !file.dir && file.name.startsWith("courses/"));
 	}
 
-	private static async processFiles(files: JSZipObject[]): Promise<any[]> {
+	private static async processSectionFiles(files: JSZipObject[]): Promise<any[]> {
 		// stringify JSZip objects and convert string to JS object
 		const parsed_sections = [];
 		for (const file of files) {
@@ -157,7 +168,15 @@ export class DataProcessor {
 	public static async getSections(content: string) {
 		const unzipped = await DataProcessor.unzipData(content);
 		const files = DataProcessor.extractCourseFiles(unzipped);
-		const sections = await DataProcessor.processFiles(files);
+		const sections = await DataProcessor.processSectionFiles(files);
 		return DataProcessor.validateSections(sections);
+	}
+
+	private static async extractRoomFiles(files: JSZipObject[]) {
+
+	}
+
+	public static async getRooms(content: string) {
+		const unzipped = await DataProcessor.unzipData(content);
 	}
 }
