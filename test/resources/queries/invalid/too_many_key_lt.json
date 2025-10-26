@@ -16,6 +16,6 @@
 			"ORDER": "sections_avg"
 		}
 	},
-	"errorExpected": true,
-	"expected": "InsightError"
+	"errorExpected": false,
+	"expected": [{"sections_dept":"frst","sections_id":"202","sections_avg":0},{"sections_dept":"lfs","sections_id":"100","sections_avg":0},{"sections_dept":"lfs","sections_id":"100","sections_avg":0},{"sections_dept":"wood","sections_id":"475","sections_avg":1},{"sections_dept":"busi","sections_id":"330","sections_avg":4},{"sections_dept":"busi","sections_id":"330","sections_avg":4},{"sections_dept":"fopr","sections_id":"362","sections_avg":4.5},{"sections_dept":"civl","sections_id":"403","sections_avg":33},{"sections_dept":"phil","sections_id":"120","sections_avg":33.2},{"sections_dept":"hist","sections_id":"102","sections_avg":34},{"sections_dept":"educ","sections_id":"172","sections_avg":39.03},{"sections_dept":"educ","sections_id":"172","sections_avg":39.03}]
 }
