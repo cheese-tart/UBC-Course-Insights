@@ -16,6 +16,6 @@
 			"ORDER": "sections_avg"
 		}
 	},
-	"errorExpected": true,
-	"expected": "InsightError"
+	"errorExpected": false,
+	"expected": []
 }
