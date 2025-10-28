@@ -172,11 +172,24 @@ export class DataProcessor {
 		return DataProcessor.validateSections(sections);
 	}
 
-	private static async extractRoomFiles(files: JSZipObject[]) {
+	private static async extractRoomFiles(files: JSZip) {
+		const index = files.file("index.htm");
+		if (!index) {
+			throw new InsightError("Kill yourself");
+		}
+		return index.async("text");
+	}
 
+	private static processBuildingFiles(text: string) {
+		try {
+			const doc = parse5.parse(text);
+		} catch {
+
+		}
 	}
 
 	public static async getRooms(content: string) {
 		const unzipped = await DataProcessor.unzipData(content);
+		const text = DataProcessor.extractRoomFiles(unzipped);
 	}
 }
