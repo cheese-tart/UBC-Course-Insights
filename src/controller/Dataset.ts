@@ -165,14 +165,14 @@ export class DataProcessor {
 		return sections;
 	}
 
-	public static async getSections(content: string) {
+	public static async getSections(content: string): Promise<any> {
 		const unzipped = await DataProcessor.unzipData(content);
 		const files = DataProcessor.extractCourseFiles(unzipped);
 		const sections = await DataProcessor.processSectionFiles(files);
 		return DataProcessor.validateSections(sections);
 	}
 
-	private static async extractRoomFiles(files: JSZip) {
+	private static async extractRoomFiles(files: JSZip): Promise<string> {
 		const index = files.file("index.htm");
 		if (!index) {
 			throw new InsightError("Kill yourself");
@@ -180,16 +180,99 @@ export class DataProcessor {
 		return index.async("text");
 	}
 
+	private static getTables(doc: any): any[] {
+		const tables: any[] = [];
+		if (doc.nodeName === "table") {
+			tables.push(doc);
+		}
+		if (!doc.childNodes) {
+			return tables;
+		}
+		for (let i = 0; i < doc.childNodes.length; i++) {
+			const children = DataProcessor.getTables(doc.childNodes[i]);
+			tables.push(...children);
+		}
+		return tables;
+	}
+
+	private static getChildren(node: any, tagName: string): any[] {
+		const result: any[] = [];
+		if (!node.childNodes) {
+			return result;
+		}
+		for (let i = 0; i < node.childNodes.length; i++) {
+			const child = node.childNodes[i]
+			if (child.nodeName === tagName) {
+				result.push(child);
+			}
+		}
+		return result;
+	}
+
+	private static getAttr(td: any, name: string): any {
+		if (!td.attrs) {
+			return null;
+		}
+		for (let i = 0; i < td.attrs.length; i++) {
+			const attr = td.attrs[i];
+			if (attr.name === name) {
+				return attr.value;
+			}
+		}
+		return null;
+	}
+
+	private static hasViewsField(td: any): boolean {
+		const attr = DataProcessor.getAttr(td, "class");
+		if (!attr) {
+			return false;
+		}
+		const classes = attr.split(/\s+/);
+		return classes.includes("views-field");
+	}
+
+	private static findBuildingTable(doc: any): any {
+		const tables = DataProcessor.getTables(doc);
+		for (let i = 0; i < tables.length; i++) {
+			const table = tables[i];
+			const tbodies = DataProcessor.getChildren(table, "tbody");
+
+			for (let j = 0; i < tbodies.length; i++) {
+				const tbody = tbodies[j];
+				const trs = DataProcessor.getChildren(tbody, "tr");
+
+				for (let k = 0; k < trs.length; k++) {
+					const tr = trs[k];
+					const tds = DataProcessor.getChildren(tr, "td");
+
+					for (let m = 0; m < tds.length; m++) {
+						const td = tds[m];
+						if (DataProcessor.hasViewsField(td)) {
+							return table;
+						}
+					}
+				}
+			}
+		}
+		throw new InsightError("Fuck you");
+	}
+
+	private static getRows(table: any) {
+
+	}
+
 	private static processBuildingFiles(text: string) {
 		try {
 			const doc = parse5.parse(text);
-		} catch {
-
+			const table = DataProcessor.findBuildingTable(doc);
+			const rows = DataProcessor.getRows(table);
+		} catch (error) {
+			throw new InsightError("Dumb bitch");
 		}
 	}
 
 	public static async getRooms(content: string) {
 		const unzipped = await DataProcessor.unzipData(content);
-		const text = DataProcessor.extractRoomFiles(unzipped);
+		const text = await DataProcessor.extractRoomFiles(unzipped);
 	}
 }
