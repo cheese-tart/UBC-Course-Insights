@@ -1,4 +1,5 @@
 import { InsightDataset, InsightError } from "./IInsightFacade";
+import { GeoResponse, Geo } from "./Geo";
 
 import fs from "fs-extra";
 import JSZip, { JSZipObject } from "jszip";
@@ -120,7 +121,6 @@ export class DataProcessor {
 	}
 
 	private static async processSectionFiles(files: JSZipObject[]): Promise<any[]> {
-		// stringify JSZip objects and convert string to JS object
 		const parsed_sections = [];
 		for (const file of files) {
 			const text = await file.async("text");
@@ -201,7 +201,7 @@ export class DataProcessor {
 			return result;
 		}
 		for (let i = 0; i < node.childNodes.length; i++) {
-			const child = node.childNodes[i]
+			const child = node.childNodes[i];
 			if (child.nodeName === tagName) {
 				result.push(child);
 			}
@@ -248,7 +248,7 @@ export class DataProcessor {
 					for (let m = 0; m < tds.length; m++) {
 						const td = tds[m];
 						if (DataProcessor.hasViewsField(td)) {
-							return table;
+							return trs;
 						}
 					}
 				}
@@ -257,15 +257,13 @@ export class DataProcessor {
 		throw new InsightError("Fuck you");
 	}
 
-	private static getRows(table: any) {
-
-	}
-
 	private static processBuildingFiles(text: string) {
 		try {
 			const doc = parse5.parse(text);
-			const table = DataProcessor.findBuildingTable(doc);
-			const rows = DataProcessor.getRows(table);
+			const rows = DataProcessor.findBuildingTable(doc);
+			for (const r in rows) {
+
+			}
 		} catch (error) {
 			throw new InsightError("Dumb bitch");
 		}
