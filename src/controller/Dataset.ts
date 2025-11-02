@@ -18,6 +18,10 @@ export interface Section {
 	audit: number;
 }
 
+export interface Building {
+
+}
+
 export interface Room {
 	fullname: string;
 	shortname: string;
@@ -105,6 +109,23 @@ export class DatasetPersistence {
 	}
 }
 
+export class SectionMapper {
+	public static convertRaw(section: any): Section {
+		return {
+			uuid: String(section.id),
+			id: String(section.Course),
+			title: String(section.Title),
+			instructor: String(section.Professor),
+			dept: String(section.Subject),
+			year: section.Section === "overall" ? 1900 : Number(section.Year),
+			avg: Number(section.Avg),
+			pass: Number(section.Pass),
+			fail: Number(section.Fail),
+			audit: Number(section.Audit),
+		}
+	}
+}
+
 export class DataProcessor {
 	private static async unzipData(content: string): Promise<JSZip> {
 		const unzipped = new JSZip();
@@ -145,18 +166,7 @@ export class DataProcessor {
 	public static validateSections(parsed_sections: any[]): any[] {
 		const sections: any[] = [];
 		for (const section of parsed_sections) {
-			sections.push({
-				uuid: String(section.id),
-				id: String(section.Course),
-				title: String(section.Title),
-				instructor: String(section.Professor),
-				dept: String(section.Subject),
-				year: section.Section === "overall" ? 1900 : Number(section.Year),
-				avg: Number(section.Avg),
-				pass: Number(section.Pass),
-				fail: Number(section.Fail),
-				audit: Number(section.Audit),
-			});
+			sections.push(SectionMapper.convertRaw(section));
 		}
 
 		if (sections.length === 0) {
