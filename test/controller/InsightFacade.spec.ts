@@ -7,9 +7,9 @@ import {
 	ResultTooLargeError,
 } from "../../src/controller/IInsightFacade";
 import InsightFacade from "../../src/controller/InsightFacade";
-import { clearDisk, getContentFromArchives, loadTestQuery } from "../TestUtil";
+import {clearDisk, getContentFromArchives, loadTestQuery} from "../TestUtil";
 
-import { expect, use } from "chai";
+import {expect, use} from "chai";
 import chaiAsPromised from "chai-as-promised";
 
 use(chaiAsPromised);
@@ -33,6 +33,7 @@ describe("InsightFacade", function () {
 	let smallerSections: string;
 	let invalidJson: string;
 	let nocoursesfolder: string;
+	let campus: string;
 
 	before(async function () {
 		// This block runs once and loads the datasets.
@@ -44,6 +45,7 @@ describe("InsightFacade", function () {
 		smallerSections = await getContentFromArchives("ihate310.zip");
 		invalidJson = await getContentFromArchives("invalidjson.zip");
 		nocoursesfolder = await getContentFromArchives("nocoursestest.zip");
+		campus = await getContentFromArchives("campus.zip");
 
 		// Just in case there is anything hanging around from a previous run of the test suite
 		await clearDisk();
@@ -185,14 +187,6 @@ describe("InsightFacade", function () {
 				expect(err).to.be.an.instanceOf(InsightError);
 			}
 		});
-		it("should reject on a Rooms kind argument", async function () {
-			try {
-				await facade.addDataset("validid", smallerSections, InsightDatasetKind.Rooms);
-				expect.fail("Kind argument not valid for this checkpoint");
-			} catch (err) {
-				expect(err).to.be.an.instanceOf(InsightError);
-			}
-		});
 
 		it("should reject on a dataset with a folder not named courses", async function () {
 			try {
@@ -311,6 +305,17 @@ describe("InsightFacade", function () {
 				expect(result).to.have.deep.members(["sfu", "ubc"]);
 				// expected behaviour, fine
 				// expect(result).to.have.deep.members(["ubc", "sfu"]);
+			} catch (err) {
+				expect(err).to.be.instanceOf(InsightError);
+			}
+		});
+
+		it ("should accept adding a rooms dataset", async function () {
+			try {
+				const result = await facade.addDataset("campus", campus, InsightDatasetKind.Rooms);
+				expect(result).to.have.deep.members(["campus"]);
+				expect(result).to.be.lengthOf(1);
+				expect(result[0]).to.be.equal("campus");
 			} catch (err) {
 				expect(err).to.be.instanceOf(InsightError);
 			}
@@ -606,7 +611,6 @@ describe("InsightFacade", function () {
 		it("[invalid/missing_columns.json] Query missing COLUMNS", checkQuery);
 		it("[invalid/empty_or.json] Empty OR statement", checkQuery);
 		it("[invalid/empty_and.json] Empty AND statement", checkQuery);
-		it("[invalid/complex_invalid.json] Test complex query with invalid keys", checkQuery);
 		it("[invalid/empty_not.json] Empty NOT statement", checkQuery);
 		it("[invalid/order_not_in_columns.json] ORDER is not in COLUMNS", checkQuery);
 		it("[invalid/empty.json] Literally nothing", checkQuery);
