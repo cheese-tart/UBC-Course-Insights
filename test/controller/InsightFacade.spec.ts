@@ -185,14 +185,6 @@ describe("InsightFacade", function () {
 				expect(err).to.be.an.instanceOf(InsightError);
 			}
 		});
-		it("should reject on a Rooms kind argument", async function () {
-			try {
-				await facade.addDataset("validid", smallerSections, InsightDatasetKind.Rooms);
-				expect.fail("Kind argument not valid for this checkpoint");
-			} catch (err) {
-				expect(err).to.be.an.instanceOf(InsightError);
-			}
-		});
 
 		it("should reject on a dataset with a folder not named courses", async function () {
 			try {
