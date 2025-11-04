@@ -190,7 +190,7 @@ export class DataProcessor {
 	private static async extractRoomFiles(files: JSZip): Promise<string> {
 		const index = files.file("index.htm");
 		if (!index) {
-			throw new InsightError("Kill yourself");
+			throw new InsightError("idk");
 		}
 		return index.async("text");
 	}
@@ -265,7 +265,7 @@ export class DataProcessor {
 				}
 			}
 		}
-		throw new InsightError("Fuck you");
+		throw new InsightError("Invalid dataset: no building table");
 	}
 
 	private static findAttr(node: any, value: string): boolean {
@@ -356,10 +356,10 @@ export class DataProcessor {
 				});
 			}
 		} catch (error) {
-			throw new InsightError("Dumb bitch");
+			throw new InsightError("idk");
 		}
 		if (buildings.length === 0) {
-			throw new InsightError("KYS");
+			throw new InsightError("Invalid dataset: no buildings found");
 		}
 		return buildings;
 	}
@@ -372,7 +372,8 @@ export class DataProcessor {
 				if (!file) {
 					continue;
 				}
-				const doc = await file.async("string");
+				const text = await file.async("string");
+				const doc = parse5.parse(text);
 				const rows = DataProcessor.findCorrectTable(doc);
 				for (const r of rows) {
 					let number;
@@ -417,10 +418,10 @@ export class DataProcessor {
 				}
 			}
 		} catch (error) {
-			throw new InsightError("ASSHOLE");
+			throw new InsightError("idk");
 		}
 		if (rooms.length === 0) {
-			throw new InsightError("KYS");
+			throw new InsightError("Invalid dataset: no rooms available");
 		}
 		return rooms;
 	}

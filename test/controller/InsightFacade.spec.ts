@@ -496,6 +496,18 @@ describe("InsightFacade", function () {
 				expect.fail("should've passed");
 			}
 		});
+
+		it("should list one rooms dataset", async function () {
+			try {
+				await facade.addDataset("campus", campus, InsightDatasetKind.Rooms);
+				const result = await facade.listDatasets();
+				expect(result).to.deep.equal([
+					{ id: "campus", kind: InsightDatasetKind.Rooms, numRows: 636 }
+				]);
+			} catch {
+				expect.fail("should've passed");
+			}
+		});
 	});
 
 	describe("PerformQuery", function () {
