@@ -7,7 +7,7 @@ import {
 	NotFoundError,
 	ResultTooLargeError,
 } from "./IInsightFacade";
-import {DataProcessor, Dataset, DatasetPersistence, Section, Room} from "./Dataset";
+import {SectionsDataProcessor, RoomsDataProcessor, Dataset, DatasetPersistence, Section, Room} from "./Dataset";
 import {QueryEngine} from "./Query";
 
 /**
@@ -16,7 +16,7 @@ import {QueryEngine} from "./Query";
  *
  */
 export default class InsightFacade implements IInsightFacade {
-	private data: DatasetPersistence;
+	private readonly data: DatasetPersistence;
 
 	constructor() {
 		this.data = new DatasetPersistence();
@@ -51,11 +51,11 @@ export default class InsightFacade implements IInsightFacade {
 		}
 
 		if (kind === InsightDatasetKind.Sections) {
-			const sections: Section[] = await DataProcessor.getSections(content);
+			const sections: Section[] = await SectionsDataProcessor.getSections(content);
 			const dataset: Dataset = { id: id, kind: kind, numRows: sections.length, content: sections };
 			this.data.addDataset(dataset);
 		} else if (kind === InsightDatasetKind.Rooms) {
-			const rooms: Room[] = await DataProcessor.getRooms(content);
+			const rooms: Room[] = await RoomsDataProcessor.getRooms(content);
 			const dataset: Dataset = { id: id, kind: kind, numRows: rooms.length, content: rooms };
 			this.data.addDataset(dataset);
 		}
