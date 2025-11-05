@@ -317,7 +317,7 @@ describe("InsightFacade", function () {
 				expect(result).to.be.lengthOf(1);
 				expect(result[0]).to.be.equal("campus");
 			} catch (err) {
-				expect(err).to.be.instanceOf(InsightError);
+				expect.fail("Error not expected");
 			}
 		});
 	});
@@ -493,6 +493,18 @@ describe("InsightFacade", function () {
 					{ id: "sfu", kind: InsightDatasetKind.Sections, numRows: 64612 },
 				]);
 			} catch {
+				expect.fail("should've passed");
+			}
+		});
+
+		it("should list one rooms dataset", async function () {
+			try {
+				await facade.addDataset("campus", campus, InsightDatasetKind.Rooms);
+				const result = await facade.listDatasets();
+				expect(result).to.deep.equal([
+					{ id: "campus", kind: InsightDatasetKind.Rooms, numRows: 363 }
+				]);
+			} catch (error) {
 				expect.fail("should've passed");
 			}
 		});

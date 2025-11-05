@@ -190,7 +190,7 @@ export class DataProcessor {
 	private static async extractRoomFiles(files: JSZip): Promise<string> {
 		const index = files.file("index.htm");
 		if (!index) {
-			throw new InsightError("Kill yourself");
+			throw new InsightError("idk");
 		}
 		return index.async("text");
 	}
@@ -246,7 +246,7 @@ export class DataProcessor {
 		return classValue.includes("views-field");
 	}
 
-	private static findCorrectTable(doc: any) {
+	private static findCorrectTable(doc: any): any[] {
 		const tables = DataProcessor.getTables(doc);
 		for (const table of tables) {
 			const tbodies = DataProcessor.getChildren(table, "tbody");
@@ -265,7 +265,7 @@ export class DataProcessor {
 				}
 			}
 		}
-		throw new InsightError("Fuck you");
+		return [];
 	}
 
 	private static findAttr(node: any, value: string): boolean {
@@ -322,6 +322,9 @@ export class DataProcessor {
 		try {
 			const doc = parse5.parse(text);
 			const rows = DataProcessor.findCorrectTable(doc);
+			if (rows.length === 0) {
+				throw new InsightError("No building table found.");
+			}
 			for (const r of rows) {
 				let fullname;
 				let shortname;
@@ -356,10 +359,10 @@ export class DataProcessor {
 				});
 			}
 		} catch (error) {
-			throw new InsightError("Dumb bitch");
+			throw new InsightError(error + " Error processing building files");
 		}
 		if (buildings.length === 0) {
-			throw new InsightError("KYS");
+			throw new InsightError("Invalid dataset: no buildings found");
 		}
 		return buildings;
 	}
@@ -372,8 +375,12 @@ export class DataProcessor {
 				if (!file) {
 					continue;
 				}
-				const doc = await file.async("string");
+				const text = await file.async("string");
+				const doc = parse5.parse(text);
 				const rows = DataProcessor.findCorrectTable(doc);
+				if (rows.length === 0) {
+					continue;
+				}
 				for (const r of rows) {
 					let number;
 					let seats;
@@ -417,15 +424,15 @@ export class DataProcessor {
 				}
 			}
 		} catch (error) {
-			throw new InsightError("ASSHOLE");
+			throw new InsightError(error + " Error processing room files");
 		}
 		if (rooms.length === 0) {
-			throw new InsightError("KYS");
+			throw new InsightError("Invalid dataset: no rooms available");
 		}
 		return rooms;
 	}
 
-	public static async getRooms(content: string):Promise<Room[]> {
+	public static async getRooms(content: string): Promise<Room[]> {
 		const unzipped = await DataProcessor.unzipData(content);
 		const text = await DataProcessor.extractRoomFiles(unzipped);
 		const buildings = await DataProcessor.processBuildingFiles(text);
