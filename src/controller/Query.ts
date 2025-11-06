@@ -1,15 +1,38 @@
-import {InsightError, InsightResult, ResultTooLargeError} from "./IInsightFacade";
-import {DatasetPersistence, Section} from "./Dataset";
+import { InsightError, InsightResult, ResultTooLargeError } from "./IInsightFacade";
+import { DatasetPersistence, Section, Room } from "./Dataset";
 
-export const NUMERIC_FIELDS = new Set(["avg", "pass", "fail", "audit", "year"]);
-export const STRING_FIELDS = new Set(["dept", "id", "instructor", "title", "uuid"]);
+export const NUMERIC_FIELDS = new Set(["avg", "pass", "fail", "audit", "year", "lat", "lon", "seats"]);
+export const STRING_FIELDS = new Set([
+	"dept",
+	"id",
+	"instructor",
+	"title",
+	"uuid",
+	"fullname",
+	"shortname",
+	"number",
+	"name",
+	"address",
+	"type",
+	"furniture",
+	"href",
+]);
 
 export type QueryAST = {
 	type: "QUERY";
 	where: FilterAST | { type: "EMPTY" };
 	columns: string[];
-	order?: string;
-	transformations?: string;
+	order?: string | { dir: "UP" | "DOWN"; keys: string[] };
+	transformations?: {
+		group: string[];
+		apply: ApplyRule[];
+	};
+};
+
+export type ApplyRule = {
+	key: string;
+	token: "MAX" | "MIN" | "AVG" | "COUNT" | "SUM";
+	field: string;
 };
 
 export type FilterAST =
@@ -62,21 +85,82 @@ export class QueryEngine {
 		QueryEngine.assert("OPTIONS" in input && QueryEngine.isObject((input as any).OPTIONS), "Missing OPTIONS block");
 		const optionsRaw = (input as any).OPTIONS as Record<string, unknown>;
 
-		QueryEngine.assert(Array.isArray(optionsRaw.COLUMNS) && optionsRaw.COLUMNS.length > 0, "COLUMNS must be a non-empty array");
+		QueryEngine.assert(
+			Array.isArray(optionsRaw.COLUMNS) && optionsRaw.COLUMNS.length > 0,
+			"COLUMNS must be a non-empty array"
+		);
 		const columns = optionsRaw.COLUMNS as unknown[];
 		columns.forEach((k) => QueryEngine.assert(typeof k === "string", "COLUMNS entries must be strings"));
 
-		let order: string | undefined;
+		let order: string | { dir: "UP" | "DOWN"; keys: string[] } | undefined;
 		if (optionsRaw.ORDER !== undefined) {
-			QueryEngine.assert(typeof optionsRaw.ORDER === "string", "ORDER must be a string key");
-			order = optionsRaw.ORDER as string;
+			if (typeof optionsRaw.ORDER === "string") {
+				order = optionsRaw.ORDER;
+			} else if (QueryEngine.isObject(optionsRaw.ORDER)) {
+				const orderObj = optionsRaw.ORDER as Record<string, unknown>;
+				QueryEngine.assert("dir" in orderObj && "keys" in orderObj, "ORDER object must have 'dir' and 'keys'");
+				QueryEngine.assert(orderObj.dir === "UP" || orderObj.dir === "DOWN", "ORDER dir must be 'UP' or 'DOWN'");
+				QueryEngine.assert(
+					Array.isArray(orderObj.keys) && orderObj.keys.length > 0,
+					"ORDER keys must be a non-empty array"
+				);
+				orderObj.keys.forEach((k: unknown) =>
+					QueryEngine.assert(typeof k === "string", "ORDER keys entries must be strings")
+				);
+				order = {
+					dir: orderObj.dir as "UP" | "DOWN",
+					keys: orderObj.keys as string[],
+				};
+			} else {
+				throw new InsightError("ORDER must be a string or an object");
+			}
+		}
+
+		let transformations: { group: string[]; apply: ApplyRule[] } | undefined;
+		if ("TRANSFORMATIONS" in input) {
+			QueryEngine.assert(QueryEngine.isObject((input as any).TRANSFORMATIONS), "TRANSFORMATIONS must be an object");
+			const transRaw = (input as any).TRANSFORMATIONS as Record<string, unknown>;
+
+			QueryEngine.assert("GROUP" in transRaw && Array.isArray(transRaw.GROUP), "TRANSFORMATIONS must have GROUP array");
+			const groupRaw = transRaw.GROUP as unknown[];
+			QueryEngine.assert(groupRaw.length > 0, "GROUP must be a non-empty array");
+			groupRaw.forEach((k) => QueryEngine.assert(typeof k === "string", "GROUP entries must be strings"));
+
+			QueryEngine.assert("APPLY" in transRaw && Array.isArray(transRaw.APPLY), "TRANSFORMATIONS must have APPLY array");
+			const applyRaw = transRaw.APPLY as unknown[];
+			applyRaw.forEach((rule) => QueryEngine.assert(QueryEngine.isObject(rule), "APPLY entries must be objects"));
+
+			const applyRules: ApplyRule[] = [];
+			for (const rule of applyRaw) {
+				const ruleObj = rule as Record<string, unknown>;
+				QueryEngine.assert(Object.keys(ruleObj).length === 1, "APPLY rule must have exactly one key");
+				const applykey = Object.keys(ruleObj)[0];
+				QueryEngine.assert(QueryEngine.isObject(ruleObj[applykey]), "APPLY rule value must be an object");
+				const applyValue = ruleObj[applykey] as Record<string, unknown>;
+				QueryEngine.assert(Object.keys(applyValue).length === 1, "APPLY rule value must have exactly one key");
+				const token = Object.keys(applyValue)[0];
+				QueryEngine.assert(["MAX", "MIN", "AVG", "COUNT", "SUM"].includes(token), `Invalid APPLY token '${token}'`);
+				const field = applyValue[token];
+				QueryEngine.assert(typeof field === "string", "APPLY field must be a string");
+				applyRules.push({
+					key: applykey,
+					token: token as "MAX" | "MIN" | "AVG" | "COUNT" | "SUM",
+					field: field as string,
+				});
+			}
+
+			transformations = {
+				group: groupRaw as string[],
+				apply: applyRules,
+			};
 		}
 
 		return {
 			type: "QUERY",
-			where: where ?? {type: "EMPTY"},
+			where: where ?? { type: "EMPTY" },
 			columns: columns as string[],
 			order,
+			transformations,
 		};
 	}
 
@@ -108,14 +192,20 @@ export class QueryEngine {
 			case "LT":
 			case "GT":
 			case "EQ": {
-				QueryEngine.assert(QueryEngine.isObject(body) && Object.keys(body).length === 1, `${tag} must be an object with one key`);
+				QueryEngine.assert(
+					QueryEngine.isObject(body) && Object.keys(body).length === 1,
+					`${tag} must be an object with one key`
+				);
 				const key = Object.keys(body)[0];
 				const value = (body as any)[key];
 				QueryEngine.assert(typeof value === "number", `${tag} comparator value must be a number`);
 				return { type: tag, key, value } as FilterAST;
 			}
 			case "IS": {
-				QueryEngine.assert(QueryEngine.isObject(body) && Object.keys(body).length === 1, "IS must be an object with one key");
+				QueryEngine.assert(
+					QueryEngine.isObject(body) && Object.keys(body).length === 1,
+					"IS must be an object with one key"
+				);
 				const key = Object.keys(body)[0];
 				const value = (body as any)[key];
 				QueryEngine.assert(typeof value === "string", "IS comparison value must be a string");
@@ -136,12 +226,24 @@ export class QueryEngine {
 		const collectKey = (k: string) => datasetIds.add(QueryEngine.getDatasetAndField(k).dataset);
 
 		ast.columns.forEach(collectKey);
-		if (ast.order) collectKey(ast.order);
+		if (ast.order) {
+			if (typeof ast.order === "string") {
+				collectKey(ast.order);
+			} else {
+				ast.order.keys.forEach(collectKey);
+			}
+		}
 		QueryEngine.walkFilter(ast.where, (node) => {
 			if (node.type === "LT" || node.type === "GT" || node.type === "EQ" || node.type === "IS") {
 				collectKey(node.key);
 			}
 		});
+
+		if (ast.transformations) {
+			ast.transformations.group.forEach(collectKey);
+			ast.transformations.apply.forEach((rule) => collectKey(rule.field));
+		}
+
 		QueryEngine.assert(datasetIds.size === 1, "Query must reference exactly one dataset id");
 
 		QueryEngine.walkFilter(ast.where, (node) => {
@@ -155,14 +257,54 @@ export class QueryEngine {
 			}
 		});
 
-		if (ast.order) {
-			QueryEngine.assert(ast.columns.includes(ast.order), "ORDER key must appear in COLUMNS");
+		// Validate GROUP and APPLY
+		if (ast.transformations) {
+			// Validate GROUP keys
+			ast.transformations.group.forEach((key) => {
+				const { field } = QueryEngine.getDatasetAndField(key);
+				QueryEngine.assert(NUMERIC_FIELDS.has(field) || STRING_FIELDS.has(field), `Invalid GROUP field '${field}'`);
+			});
+
+			// Validate APPLY rules
+			const applyKeys = new Set<string>();
+			ast.transformations.apply.forEach((rule) => {
+				QueryEngine.assert(!applyKeys.has(rule.key), `Duplicate applykey '${rule.key}'`);
+				applyKeys.add(rule.key);
+
+				const { field } = QueryEngine.getDatasetAndField(rule.field);
+				if (rule.token === "MAX" || rule.token === "MIN" || rule.token === "AVG" || rule.token === "SUM") {
+					QueryEngine.assert(NUMERIC_FIELDS.has(field), `${rule.token} must use a numeric field`);
+				}
+				// COUNT can be used on any field
+			});
+
+			// Validate COLUMNS: all keys must be in GROUP or be applykeys
+			const groupSet = new Set(ast.transformations.group);
+			const applyKeySet = new Set(ast.transformations.apply.map((r) => r.key));
+			ast.columns.forEach((key) => {
+				QueryEngine.assert(
+					groupSet.has(key) || applyKeySet.has(key),
+					`COLUMNS key '${key}' must be in GROUP or be an applykey`
+				);
+			});
+		} else {
+			// No transformations: validate columns normally
+			ast.columns.forEach((key) => {
+				const { field } = QueryEngine.getDatasetAndField(key);
+				QueryEngine.assert(NUMERIC_FIELDS.has(field) || STRING_FIELDS.has(field), `Invalid column field '${field}'`);
+			});
 		}
 
-		ast.columns.forEach((key) => {
-			const { field } = QueryEngine.getDatasetAndField(key);
-			QueryEngine.assert(NUMERIC_FIELDS.has(field) || STRING_FIELDS.has(field), `Invalid column field '${field}'`);
-		});
+		// Validate SORT keys
+		if (ast.order) {
+			if (typeof ast.order === "string") {
+				QueryEngine.assert(ast.columns.includes(ast.order), "ORDER key must appear in COLUMNS");
+			} else {
+				ast.order.keys.forEach((key) => {
+					QueryEngine.assert(ast.columns.includes(key), `ORDER key '${key}' must appear in COLUMNS`);
+				});
+			}
+		}
 	}
 
 	private static walkFilter(node: FilterAST | { type: "EMPTY" }, f: (n: FilterAST) => void) {
@@ -183,27 +325,83 @@ export class QueryEngine {
 	public static async executeQuery(ast: QueryAST, datasets: DatasetPersistence): Promise<InsightResult[]> {
 		const datasetId = QueryEngine.getDatasetAndField(ast.columns[0]).dataset;
 
-		const rows = await datasets.getSectionsById(datasetId);
-
-		const filtered = rows.filter((r: any) => QueryEngine.evalFilter(ast.where, r, datasetId));
-
-		const projected: InsightResult[] = filtered.map((r: { [x: string]: any }) => {
-			const out: InsightResult = {};
-			for (const key of ast.columns) {
-				const { field } = QueryEngine.getDatasetAndField(key);
-				out[key] = r[field as keyof Section] as any;
+		// Determine dataset type and get rows
+		let rows: (Section | Room)[];
+		try {
+			rows = await datasets.getSectionsById(datasetId);
+		} catch {
+			try {
+				rows = await datasets.getRoomsById(datasetId);
+			} catch {
+				throw new InsightError(`Dataset with id '${datasetId}' not found`);
 			}
-			return out;
-		});
-
-		if (ast.order) {
-			const orderKey = ast.order;
-			projected.sort((a, b) => compareValues(a[orderKey], b[orderKey]));
 		}
 
-		function compareValues(x: any, y: any): number {
-			if (typeof x === "number" && typeof y === "number") return x - y;
-			return String(x).localeCompare(String(y));
+		// Filter rows
+		const filtered = rows.filter((r: any) => QueryEngine.evalFilter(ast.where, r, datasetId));
+
+		let projected: InsightResult[];
+
+		// Apply transformations if present
+		if (ast.transformations) {
+			const transformations = ast.transformations;
+			// Group rows
+			const groups = QueryEngine.groupRows(filtered, transformations.group, datasetId);
+
+			// Apply rules to each group
+			const groupedResults: InsightResult[] = [];
+			groups.forEach((group) => {
+				const result: InsightResult = {};
+
+				// Add GROUP keys to result
+				for (const groupKeyField of transformations.group) {
+					const { field } = QueryEngine.getDatasetAndField(groupKeyField);
+					result[groupKeyField] = group[0][field as keyof (Section | Room)] as any;
+				}
+
+				// Apply APPLY rules
+				for (const rule of transformations.apply) {
+					result[rule.key] = QueryEngine.applyRule(group, rule, datasetId);
+				}
+
+				groupedResults.push(result);
+			});
+
+			// Project columns
+			projected = groupedResults.map((r) => {
+				const out: InsightResult = {};
+				for (const key of ast.columns) {
+					out[key] = r[key];
+				}
+				return out;
+			});
+		} else {
+			// No transformations: project directly
+			projected = filtered.map((r: { [x: string]: any }) => {
+				const out: InsightResult = {};
+				for (const key of ast.columns) {
+					const { field } = QueryEngine.getDatasetAndField(key);
+					out[key] = r[field as keyof (Section | Room)] as any;
+				}
+				return out;
+			});
+		}
+
+		// Sort results
+		if (ast.order) {
+			if (typeof ast.order === "string") {
+				const orderKey = ast.order;
+				projected.sort((a, b) => QueryEngine.compareValues(a[orderKey], b[orderKey], true));
+			} else {
+				const orderObj = ast.order;
+				projected.sort((a, b) => {
+					for (const key of orderObj.keys) {
+						const cmp = QueryEngine.compareValues(a[key], b[key], orderObj.dir === "UP");
+						if (cmp !== 0) return cmp;
+					}
+					return 0;
+				});
+			}
 		}
 
 		if (projected.length > 5000) throw new ResultTooLargeError();
@@ -211,7 +409,81 @@ export class QueryEngine {
 		return projected;
 	}
 
-	private static evalFilter(node: FilterAST | { type: "EMPTY" }, row: Section, datasetId: string): boolean {
+	private static groupRows(
+		rows: (Section | Room)[],
+		groupKeys: string[],
+		datasetId: string
+	): Map<string, (Section | Room)[]> {
+		const groups = new Map<string, (Section | Room)[]>();
+
+		for (const row of rows) {
+			// Create group key by concatenating values of all group keys
+			const groupKeyParts: string[] = [];
+			for (const key of groupKeys) {
+				const { field } = QueryEngine.getDatasetAndField(key);
+				const value = row[field as keyof (Section | Room)];
+				groupKeyParts.push(String(value));
+			}
+			const groupKey = groupKeyParts.join("|");
+
+			if (!groups.has(groupKey)) {
+				groups.set(groupKey, []);
+			}
+			groups.get(groupKey)!.push(row);
+		}
+
+		return groups;
+	}
+
+	private static applyRule(group: (Section | Room)[], rule: ApplyRule, datasetId: string): number {
+		const { field } = QueryEngine.getDatasetAndField(rule.field);
+		const values: any[] = [];
+
+		for (const row of group) {
+			const value = row[field as keyof (Section | Room)];
+			if (rule.token === "COUNT") {
+				// COUNT: count unique occurrences
+				if (!values.includes(value)) {
+					values.push(value);
+				}
+			} else {
+				// MAX, MIN, AVG, SUM: need numeric values
+				if (typeof value !== "number") {
+					throw new InsightError(`Field '${field}' is not numeric for ${rule.token}`);
+				}
+				values.push(value);
+			}
+		}
+
+		switch (rule.token) {
+			case "MAX":
+				return Math.max(...values);
+			case "MIN":
+				return Math.min(...values);
+			case "AVG":
+				return QueryEngine.roundToTwoDecimals(values.reduce((a, b) => a + b, 0) / values.length);
+			case "SUM":
+				return QueryEngine.roundToTwoDecimals(values.reduce((a, b) => a + b, 0));
+			case "COUNT":
+				return values.length;
+		}
+	}
+
+	private static roundToTwoDecimals(num: number): number {
+		return Math.round(num * 100) / 100;
+	}
+
+	private static compareValues(x: any, y: any, ascending: boolean): number {
+		let result: number;
+		if (typeof x === "number" && typeof y === "number") {
+			result = x - y;
+		} else {
+			result = String(x).localeCompare(String(y));
+		}
+		return ascending ? result : -result;
+	}
+
+	private static evalFilter(node: FilterAST | { type: "EMPTY" }, row: Section | Room, datasetId: string): boolean {
 		if (node.type === "EMPTY") return true;
 		switch (node.type) {
 			case "AND":
@@ -231,7 +503,7 @@ export class QueryEngine {
 		}
 	}
 
-	private static compareNumeric(node: Extract<FilterAST, { type: "LT" | "GT" | "EQ" }>, row: Section): boolean {
+	private static compareNumeric(node: Extract<FilterAST, { type: "LT" | "GT" | "EQ" }>, row: Section | Room): boolean {
 		const { field } = QueryEngine.getDatasetAndField(node.key);
 		const actual = (row as any)[field];
 		if (typeof actual !== "number") throw new InsightError(`Field ${field} is not numeric`);
@@ -240,7 +512,7 @@ export class QueryEngine {
 		return actual === node.value;
 	}
 
-	private static compareString(node: Extract<FilterAST, { type: "IS" }>, row: Section): boolean {
+	private static compareString(node: Extract<FilterAST, { type: "IS" }>, row: Section | Room): boolean {
 		const { field } = QueryEngine.getDatasetAndField(node.key);
 		const actual = (row as any)[field];
 		if (typeof actual !== "string") throw new InsightError(`Field ${field} is not string`);

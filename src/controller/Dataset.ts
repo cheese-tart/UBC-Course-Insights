@@ -112,6 +112,16 @@ export class DatasetPersistence {
 		}
 		throw new InsightError(`Dataset with id '${id}' not found`);
 	}
+
+	public async getRoomsById(id: string): Promise<Room[]> {
+		await this.loadData();
+		for (const dataset of this.datasets) {
+			if (dataset.id === id) {
+				return dataset.content;
+			}
+		}
+		throw new InsightError(`Dataset with id '${id}' not found`);
+	}
 }
 
 export class SectionMapper {
@@ -127,7 +137,7 @@ export class SectionMapper {
 			pass: Number(section.Pass),
 			fail: Number(section.Fail),
 			audit: Number(section.Audit),
-		}
+		};
 	}
 }
 
@@ -420,7 +430,7 @@ export class DataProcessor {
 						type: String(type),
 						furniture: String(furniture),
 						href: String(href),
-					})
+					});
 				}
 			}
 		} catch (error) {
