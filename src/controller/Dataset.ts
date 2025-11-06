@@ -415,7 +415,7 @@ export class DataProcessor {
 							href = DataProcessor.getHref(cell);
 						}
 					}
-					if (!number || !seats || !furniture || !type || !href) {
+					if (!number || !seats || !furniture || type === null || type === undefined || !href) {
 						continue;
 					}
 					rooms.push({

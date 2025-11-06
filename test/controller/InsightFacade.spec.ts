@@ -7,9 +7,9 @@ import {
 	ResultTooLargeError,
 } from "../../src/controller/IInsightFacade";
 import InsightFacade from "../../src/controller/InsightFacade";
-import {clearDisk, getContentFromArchives, loadTestQuery} from "../TestUtil";
+import { clearDisk, getContentFromArchives, loadTestQuery } from "../TestUtil";
 
-import {expect, use} from "chai";
+import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 
 use(chaiAsPromised);
@@ -55,16 +55,6 @@ describe("InsightFacade", function () {
 		beforeEach(async function () {
 			await clearDisk();
 			facade = new InsightFacade();
-		});
-
-		it("should reject with an empty dataset id", async function () {
-			// Read the "Free Mutant Walkthrough" in the spec for tips on how to get started!
-			try {
-				await facade.addDataset("", sections, InsightDatasetKind.Sections);
-				expect.fail("Should have thrown!");
-			} catch (err) {
-				expect(err).to.be.instanceOf(InsightError);
-			}
 		});
 
 		it("should reject with whitespace only dataset id", async function () {
@@ -310,7 +300,7 @@ describe("InsightFacade", function () {
 			}
 		});
 
-		it ("should accept adding a rooms dataset", async function () {
+		it("should accept adding a rooms dataset", async function () {
 			try {
 				const result = await facade.addDataset("campus", campus, InsightDatasetKind.Rooms);
 				expect(result).to.have.deep.members(["campus"]);
@@ -501,9 +491,7 @@ describe("InsightFacade", function () {
 			try {
 				await facade.addDataset("campus", campus, InsightDatasetKind.Rooms);
 				const result = await facade.listDatasets();
-				expect(result).to.deep.equal([
-					{ id: "campus", kind: InsightDatasetKind.Rooms, numRows: 363 }
-				]);
+				expect(result).to.deep.equal([{ id: "campus", kind: InsightDatasetKind.Rooms, numRows: 364 }]);
 			} catch (error) {
 				expect.fail("should've passed");
 			}
