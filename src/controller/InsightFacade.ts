@@ -45,10 +45,8 @@ export default class InsightFacade implements IInsightFacade {
 		if (InsightFacade.checkContent(content)) {
 			throw new InsightError("Invalid content");
 		}
-		for (const dataset of this.data.getDatasets()) {
-			if (dataset.id === id) {
-				throw new InsightError("Duplicate ID");
-			}
+		if (this.data.getDatasets().some((dataset) => dataset.id === id)) {
+			throw new InsightError("Duplicate ID");
 		}
 
 		if (kind === InsightDatasetKind.Sections) {
@@ -62,11 +60,7 @@ export default class InsightFacade implements IInsightFacade {
 		}
 		await this.data.saveData();
 
-		const ids: string[] = [];
-		for (const d of this.data.getDatasets()) {
-			ids.push(d.id);
-		}
-		return ids;
+		return this.data.getDatasets().map((d) => d.id);
 	}
 
 	public async removeDataset(id: string): Promise<string> {
@@ -76,22 +70,11 @@ export default class InsightFacade implements IInsightFacade {
 			throw new InsightError("Invalid ID");
 		}
 
-		let found = false;
-		for (const dataset of this.data.getDatasets()) {
-			if (dataset.id === id) {
-				found = true;
-				break;
-			}
-		}
-		if (!found) {
+		const datasets = this.data.getDatasets();
+		const filtered = datasets.filter((dataset) => dataset.id !== id);
+		
+		if (filtered.length === datasets.length) {
 			throw new NotFoundError();
-		}
-
-		const filtered: Dataset[] = [];
-		for (const dataset of this.data.getDatasets()) {
-			if (dataset.id !== id) {
-				filtered.push(dataset);
-			}
 		}
 
 		this.data.setDatasets(filtered);
@@ -113,15 +96,10 @@ export default class InsightFacade implements IInsightFacade {
 
 	public async listDatasets(): Promise<InsightDataset[]> {
 		await this.data.loadData();
-		const list: InsightDataset[] = [];
-
-		for (const dataset of this.data.getDatasets()) {
-			list.push({
-				id: dataset.id,
-				kind: dataset.kind,
-				numRows: dataset.numRows,
-			});
-		}
-		return list;
+		return this.data.getDatasets().map((dataset) => ({
+			id: dataset.id,
+			kind: dataset.kind,
+			numRows: dataset.numRows,
+		}));
 	}
 }

@@ -51,6 +51,7 @@ const file: string = directory + "/datasets.json";
 export class DatasetPersistence {
 	private datasets: Dataset[];
 	private dataLoaded: boolean;
+	private static persistenceEnsured: boolean = false;
 
 	constructor() {
 		this.datasets = [];
@@ -70,6 +71,9 @@ export class DatasetPersistence {
 	}
 
 	private static async ensurePersistence(): Promise<void> {
+		if (DatasetPersistence.persistenceEnsured) {
+			return;
+		}
 		try {
 			await fs.ensureDir(directory);
 			await fs.ensureFile(file);
@@ -77,29 +81,32 @@ export class DatasetPersistence {
 			if (stats.size === 0) {
 				await fs.writeJson(file, []);
 			}
+			DatasetPersistence.persistenceEnsured = true;
 		} catch (error) {
-			console.error("penis");
+			// Silently fail - persistence directory/file creation issues shouldn't block execution
+			// The datasets array will remain empty and operations will work in-memory only
 		}
 	}
 
 	public async loadData(): Promise<void> {
-		await DatasetPersistence.ensurePersistence();
-
 		if (!this.dataLoaded) {
+			await DatasetPersistence.ensurePersistence();
 			try {
 				this.datasets = await fs.readJson(file);
-				this.dataLoaded = true;
 			} catch (error) {
-				console.error("penis");
+				// File doesn't exist or is invalid - use empty array (expected on first run)
+				this.datasets = [];
 			}
+			this.dataLoaded = true;
 		}
 	}
 
 	public async saveData(): Promise<void> {
 		try {
 			await fs.writeJson(file, this.datasets);
-		} catch {
-			console.error("penis");
+		} catch (error) {
+			// Silently fail - save errors shouldn't break the API
+			// Data remains in memory for the current session
 		}
 	}
 
