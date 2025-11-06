@@ -8,9 +8,8 @@ import {
 	ResultTooLargeError,
 } from "./IInsightFacade";
 
-import { DataProcessor, Dataset, DatasetPersistence, Section, Room } from "./Dataset";
+import { SectionsDataProcessor, RoomsDataProcessor, Dataset, DatasetPersistence, Section, Room } from "./Dataset";
 import { QueryEngine } from "./Query";
-
 
 /**
  * This is the main programmatic entry point for the project.
