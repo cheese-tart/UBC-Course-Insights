@@ -124,6 +124,18 @@ export class DatasetPersistence {
 	}
 }
 
+export class FileUnzipper {
+	public static async unzipData(content: string): Promise<JSZip> {
+		const unzipped = new JSZip();
+		try {
+			await unzipped.loadAsync(content, { base64: true });
+		} catch (error) {
+			throw new InsightError("content is not base64 encoded string");
+		}
+		return unzipped;
+	}
+}
+
 export class SectionMapper {
 	public static convertRaw(section: any): Section {
 		return {
@@ -141,17 +153,7 @@ export class SectionMapper {
 	}
 }
 
-export class DataProcessor {
-	private static async unzipData(content: string): Promise<JSZip> {
-		const unzipped = new JSZip();
-		try {
-			await unzipped.loadAsync(content, { base64: true });
-		} catch (error) {
-			throw new InsightError("content is not base64 encoded string");
-		}
-		return unzipped;
-	}
-
+export class SectionsDataProcessor {
 	private static extractCourseFiles(unzipped: JSZip): JSZipObject[] {
 		return Object.values(unzipped.files).filter((file) => !file.dir && file.name.startsWith("courses/"));
 	}
@@ -191,20 +193,21 @@ export class DataProcessor {
 	}
 
 	public static async getSections(content: string): Promise<any> {
-		const unzipped = await DataProcessor.unzipData(content);
-		const files = DataProcessor.extractCourseFiles(unzipped);
-		const sections = await DataProcessor.processSectionFiles(files);
-		return DataProcessor.validateSections(sections);
+		const unzipped = await FileUnzipper.unzipData(content);
+		const files = SectionsDataProcessor.extractCourseFiles(unzipped);
+		const sections = await SectionsDataProcessor.processSectionFiles(files);
+		return SectionsDataProcessor.validateSections(sections);
 	}
+}
 
-	private static async extractRoomFiles(files: JSZip): Promise<string> {
-		const index = files.file("index.htm");
-		if (!index) {
-			throw new InsightError("idk");
-		}
-		return index.async("text");
+export class BuildingRoomFileParser {
+	public static async ParseData(file: JSZipObject) {
+		const text = await file.async("text");
+		return parse5.parse(text);
 	}
+}
 
+export class RoomsDataProcessor {
 	private static getTables(doc: any): any[] {
 		const tables: any[] = [];
 		if (doc.nodeName === "table") {
@@ -214,7 +217,7 @@ export class DataProcessor {
 			return tables;
 		}
 		for (let i = 0; i < doc.childNodes.length; i++) {
-			const children = DataProcessor.getTables(doc.childNodes[i]);
+			const children = RoomsDataProcessor.getTables(doc.childNodes[i]);
 			tables.push(...children);
 		}
 		return tables;
@@ -248,7 +251,7 @@ export class DataProcessor {
 	}
 
 	private static hasViewsField(td: any): boolean {
-		const attr = DataProcessor.getAttr(td, "class");
+		const attr = RoomsDataProcessor.getAttr(td, "class");
 		if (!attr) {
 			return false;
 		}
@@ -257,18 +260,18 @@ export class DataProcessor {
 	}
 
 	private static findCorrectTable(doc: any): any[] {
-		const tables = DataProcessor.getTables(doc);
+		const tables = RoomsDataProcessor.getTables(doc);
 		for (const table of tables) {
-			const tbodies = DataProcessor.getChildren(table, "tbody");
+			const tbodies = RoomsDataProcessor.getChildren(table, "tbody");
 
 			for (const tbody of tbodies) {
-				const trs = DataProcessor.getChildren(tbody, "tr");
+				const trs = RoomsDataProcessor.getChildren(tbody, "tr");
 
 				for (const tr of trs) {
-					const tds = DataProcessor.getChildren(tr, "td");
+					const tds = RoomsDataProcessor.getChildren(tr, "td");
 
 					for (const td of tds) {
-						if (DataProcessor.hasViewsField(td)) {
+						if (RoomsDataProcessor.hasViewsField(td)) {
 							return trs;
 						}
 					}
@@ -292,9 +295,9 @@ export class DataProcessor {
 	}
 
 	private static getAnchorText(cell: any, title: string) {
-		const as = DataProcessor.getChildren(cell, "a");
+		const as = RoomsDataProcessor.getChildren(cell, "a");
 		for (const a of as) {
-			if (DataProcessor.findAttr(a, title)) {
+			if (RoomsDataProcessor.findAttr(a, title)) {
 				for (let i = 0; i < a.childNodes.length; i++) {
 					const child = a.childNodes[i];
 					if (child.nodeName === "#text") {
@@ -317,9 +320,9 @@ export class DataProcessor {
 	}
 
 	private static getHref(cell: any) {
-		const as = DataProcessor.getChildren(cell, "a");
+		const as = RoomsDataProcessor.getChildren(cell, "a");
 		for (const a of as) {
-			const href = DataProcessor.getAttr(a, "href");
+			const href = RoomsDataProcessor.getAttr(a, "href");
 			if (href) {
 				return href;
 			}
@@ -327,49 +330,49 @@ export class DataProcessor {
 		return null;
 	}
 
-	private static async processBuildingFiles(text: string): Promise<Building[]> {
+	private static async processBuildingFiles(files: JSZip): Promise<Building[]> {
 		const buildings: Building[] = [];
-		try {
-			const doc = parse5.parse(text);
-			const rows = DataProcessor.findCorrectTable(doc);
-			if (rows.length === 0) {
-				throw new InsightError("No building table found.");
-			}
-			for (const r of rows) {
-				let fullname;
-				let shortname;
-				let address;
-				let href;
-				const cells = DataProcessor.getChildren(r, "td");
-				for (const cell of cells) {
-					if (DataProcessor.findAttr(cell, "views-field views-field-title")) {
-						fullname = DataProcessor.getAnchorText(cell, "Building Details and Map");
-					}
-					if (DataProcessor.findAttr(cell, "views-field views-field-field-building-code")) {
-						shortname = DataProcessor.getText(cell);
-					}
-					if (DataProcessor.findAttr(cell, "views-field views-field-field-building-address")) {
-						address = DataProcessor.getText(cell);
-					}
-					if (DataProcessor.findAttr(cell, "views-field views-field-nothing")) {
-						href = DataProcessor.getHref(cell);
-					}
+		const index = files.file("index.htm");
+		if (!index) {
+			throw new InsightError("Index file not found");
+		}
+		const doc = await BuildingRoomFileParser.ParseData(index);
+		const rows = RoomsDataProcessor.findCorrectTable(doc);
+		if (rows.length === 0) {
+			throw new InsightError("No building table found.");
+		}
+		for (const r of rows) {
+			let fullname;
+			let shortname;
+			let address;
+			let href;
+			const cells = RoomsDataProcessor.getChildren(r, "td");
+			for (const cell of cells) {
+				if (RoomsDataProcessor.findAttr(cell, "views-field views-field-title")) {
+					fullname = RoomsDataProcessor.getAnchorText(cell, "Building Details and Map");
 				}
-				if (!fullname || !shortname || !address || !href) {
-					continue;
+				if (RoomsDataProcessor.findAttr(cell, "views-field views-field-field-building-code")) {
+					shortname = RoomsDataProcessor.getText(cell);
 				}
-				const geoResponse: GeoResponse = await Geo.getGeolocation(address);
-				buildings.push({
-					fullname: String(fullname),
-					shortname: String(shortname),
-					address: String(address),
-					lat: Number(geoResponse.lat),
-					lon: Number(geoResponse.lon),
-					href: String(href),
-				});
+				if (RoomsDataProcessor.findAttr(cell, "views-field views-field-field-building-address")) {
+					address = RoomsDataProcessor.getText(cell);
+				}
+				if (RoomsDataProcessor.findAttr(cell, "views-field views-field-nothing")) {
+					href = RoomsDataProcessor.getHref(cell);
+				}
 			}
-		} catch (error) {
-			throw new InsightError(error + " Error processing building files");
+			if (!fullname || !shortname || !address || !href) {
+				continue;
+			}
+			const geoResponse: GeoResponse = await Geo.getGeolocation(address);
+			buildings.push({
+				fullname: String(fullname),
+				shortname: String(shortname),
+				address: String(address),
+				lat: Number(geoResponse.lat),
+				lon: Number(geoResponse.lon),
+				href: String(href),
+			});
 		}
 		if (buildings.length === 0) {
 			throw new InsightError("Invalid dataset: no buildings found");
@@ -377,7 +380,7 @@ export class DataProcessor {
 		return buildings;
 	}
 
-	private static async processRoomFiles(buildings: Building[], files: JSZip) {
+	private static async processRoomFiles(buildings: Building[], files: JSZip): Promise<Room[]> {
 		const rooms: Room[] = [];
 		try {
 			for (const building of buildings) {
@@ -385,9 +388,8 @@ export class DataProcessor {
 				if (!file) {
 					continue;
 				}
-				const text = await file.async("string");
-				const doc = parse5.parse(text);
-				const rows = DataProcessor.findCorrectTable(doc);
+				const doc = await BuildingRoomFileParser.ParseData(file);
+				const rows = RoomsDataProcessor.findCorrectTable(doc);
 				if (rows.length === 0) {
 					continue;
 				}
@@ -397,22 +399,22 @@ export class DataProcessor {
 					let type;
 					let furniture;
 					let href;
-					const cells = DataProcessor.getChildren(r, "td");
+					const cells = RoomsDataProcessor.getChildren(r, "td");
 					for (const cell of cells) {
-						if (DataProcessor.findAttr(cell, "views-field views-field-field-room-number")) {
-							number = DataProcessor.getAnchorText(cell, "Room Details");
+						if (RoomsDataProcessor.findAttr(cell, "views-field views-field-field-room-number")) {
+							number = RoomsDataProcessor.getAnchorText(cell, "Room Details");
 						}
-						if (DataProcessor.findAttr(cell, "views-field views-field-field-room-capacity")) {
-							seats = DataProcessor.getText(cell);
+						if (RoomsDataProcessor.findAttr(cell, "views-field views-field-field-room-capacity")) {
+							seats = RoomsDataProcessor.getText(cell);
 						}
-						if (DataProcessor.findAttr(cell, "views-field views-field-field-room-furniture")) {
-							furniture = DataProcessor.getText(cell);
+						if (RoomsDataProcessor.findAttr(cell, "views-field views-field-field-room-furniture")) {
+							furniture = RoomsDataProcessor.getText(cell);
 						}
-						if (DataProcessor.findAttr(cell, "views-field views-field-field-room-type")) {
-							type = DataProcessor.getText(cell);
+						if (RoomsDataProcessor.findAttr(cell, "views-field views-field-field-room-type")) {
+							type = RoomsDataProcessor.getText(cell);
 						}
-						if (DataProcessor.findAttr(cell, "views-field views-field-nothing")) {
-							href = DataProcessor.getHref(cell);
+						if (RoomsDataProcessor.findAttr(cell, "views-field views-field-nothing")) {
+							href = RoomsDataProcessor.getHref(cell);
 						}
 					}
 					if (!number || !seats || !furniture || type === null || type === undefined || !href) {
@@ -443,9 +445,8 @@ export class DataProcessor {
 	}
 
 	public static async getRooms(content: string): Promise<Room[]> {
-		const unzipped = await DataProcessor.unzipData(content);
-		const text = await DataProcessor.extractRoomFiles(unzipped);
-		const buildings = await DataProcessor.processBuildingFiles(text);
-		return await DataProcessor.processRoomFiles(buildings, unzipped);
+		const unzipped = await FileUnzipper.unzipData(content);
+		const buildings = await RoomsDataProcessor.processBuildingFiles(unzipped);
+		return await RoomsDataProcessor.processRoomFiles(buildings, unzipped);
 	}
 }

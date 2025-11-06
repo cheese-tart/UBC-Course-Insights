@@ -440,6 +440,16 @@ describe("InsightFacade", function () {
 				expect.fail("should've passed");
 			}
 		});
+
+		it("should accept removing a rooms dataset", async function () {
+			try {
+				await facade.addDataset("campus", campus, InsightDatasetKind.Rooms);
+				const result = await facade.removeDataset("campus");
+				expect(result).to.equal("campus");
+			} catch {
+				expect.fail("should've passed");
+			}
+		});
 	});
 
 	describe("listDatasets", function () {
