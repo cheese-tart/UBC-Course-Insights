@@ -223,9 +223,23 @@ export class QueryEngine {
 
 	public static validateSemantics(ast: QueryAST) {
 		const datasetIds = new Set<string>();
-		const collectKey = (k: string) => datasetIds.add(QueryEngine.getDatasetAndField(k).dataset);
 
-		ast.columns.forEach(collectKey);
+		// Helper to collect dataset ID from a key (only if it's a dataset key, not an apply key)
+		const collectKey = (k: string) => {
+			// Check if it's a dataset key (contains underscore) vs apply key
+			if (k.includes("_")) {
+				datasetIds.add(QueryEngine.getDatasetAndField(k).dataset);
+			}
+			// Apply keys don't contribute to dataset ID collection
+		};
+
+		// Collect dataset IDs from columns (only dataset keys, not apply keys)
+		ast.columns.forEach((key) => {
+			if (key.includes("_")) {
+				collectKey(key);
+			}
+		});
+
 		if (ast.order) {
 			if (typeof ast.order === "string") {
 				collectKey(ast.order);
@@ -288,8 +302,12 @@ export class QueryEngine {
 				);
 			});
 		} else {
-			// No transformations: validate columns normally
+			// No transformations: all columns must be dataset keys
 			ast.columns.forEach((key) => {
+				QueryEngine.assert(
+					key.includes("_"),
+					`Column '${key}' must be a dataset key when TRANSFORMATIONS are not present`
+				);
 				const { field } = QueryEngine.getDatasetAndField(key);
 				QueryEngine.assert(NUMERIC_FIELDS.has(field) || STRING_FIELDS.has(field), `Invalid column field '${field}'`);
 			});
@@ -298,10 +316,21 @@ export class QueryEngine {
 		// Validate SORT keys
 		if (ast.order) {
 			if (typeof ast.order === "string") {
+				// Order key must be in columns and must be valid (dataset key or apply key)
 				QueryEngine.assert(ast.columns.includes(ast.order), "ORDER key must appear in COLUMNS");
+				// If it's a dataset key (has underscore), validate it exists
+				if (ast.order.includes("_")) {
+					const { field } = QueryEngine.getDatasetAndField(ast.order);
+					QueryEngine.assert(NUMERIC_FIELDS.has(field) || STRING_FIELDS.has(field), `Invalid ORDER field '${field}'`);
+				}
 			} else {
 				ast.order.keys.forEach((key) => {
 					QueryEngine.assert(ast.columns.includes(key), `ORDER key '${key}' must appear in COLUMNS`);
+					// If it's a dataset key (has underscore), validate it exists
+					if (key.includes("_")) {
+						const { field } = QueryEngine.getDatasetAndField(key);
+						QueryEngine.assert(NUMERIC_FIELDS.has(field) || STRING_FIELDS.has(field), `Invalid ORDER field '${field}'`);
+					}
 				});
 			}
 		}
@@ -323,22 +352,59 @@ export class QueryEngine {
 	}
 
 	public static async executeQuery(ast: QueryAST, datasets: DatasetPersistence): Promise<InsightResult[]> {
-		const datasetId = QueryEngine.getDatasetAndField(ast.columns[0]).dataset;
+		// Extract dataset ID from columns, GROUP, or WHERE filters
+		let datasetId: string | null = null;
+
+		// Try to get dataset ID from columns (look for a dataset key, not apply key)
+		for (const key of ast.columns) {
+			if (key.includes("_")) {
+				datasetId = QueryEngine.getDatasetAndField(key).dataset;
+				break;
+			}
+		}
+
+		// If no dataset key in columns, try GROUP keys
+		if (!datasetId && ast.transformations) {
+			for (const key of ast.transformations.group) {
+				if (key.includes("_")) {
+					datasetId = QueryEngine.getDatasetAndField(key).dataset;
+					break;
+				}
+			}
+		}
+
+		// If still no dataset ID, try WHERE filters
+		if (!datasetId) {
+			QueryEngine.walkFilter(ast.where, (node) => {
+				if ((node.type === "LT" || node.type === "GT" || node.type === "EQ" || node.type === "IS") && !datasetId) {
+					if (node.key.includes("_")) {
+						datasetId = QueryEngine.getDatasetAndField(node.key).dataset;
+					}
+				}
+			});
+		}
+
+		if (!datasetId) {
+			throw new InsightError("Could not determine dataset ID from query");
+		}
+
+		// At this point, datasetId is guaranteed to be a string
+		const finalDatasetId: string = datasetId;
 
 		// Determine dataset type and get rows
 		let rows: (Section | Room)[];
 		try {
-			rows = await datasets.getSectionsById(datasetId);
+			rows = await datasets.getSectionsById(finalDatasetId);
 		} catch {
 			try {
-				rows = await datasets.getRoomsById(datasetId);
+				rows = await datasets.getRoomsById(finalDatasetId);
 			} catch {
-				throw new InsightError(`Dataset with id '${datasetId}' not found`);
+				throw new InsightError(`Dataset with id '${finalDatasetId}' not found`);
 			}
 		}
 
 		// Filter rows
-		const filtered = rows.filter((r: any) => QueryEngine.evalFilter(ast.where, r, datasetId));
+		const filtered = rows.filter((r: any) => QueryEngine.evalFilter(ast.where, r, finalDatasetId));
 
 		let projected: InsightResult[];
 
@@ -346,7 +412,7 @@ export class QueryEngine {
 		if (ast.transformations) {
 			const transformations = ast.transformations;
 			// Group rows
-			const groups = QueryEngine.groupRows(filtered, transformations.group, datasetId);
+			const groups = QueryEngine.groupRows(filtered, transformations.group, finalDatasetId);
 
 			// Apply rules to each group
 			const groupedResults: InsightResult[] = [];
@@ -361,7 +427,7 @@ export class QueryEngine {
 
 				// Apply APPLY rules
 				for (const rule of transformations.apply) {
-					result[rule.key] = QueryEngine.applyRule(group, rule, datasetId);
+					result[rule.key] = QueryEngine.applyRule(group, rule, finalDatasetId);
 				}
 
 				groupedResults.push(result);
