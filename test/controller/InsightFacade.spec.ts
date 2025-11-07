@@ -761,7 +761,7 @@ describe("InsightFacade", function () {
 		it("[valid/validDirDown.json] Valid DIR_DOWN test (room)", checkQuery);
 		it("[valid/validDirUp.json] Valid DIR_UP test (room)", checkQuery);
 		// TODO: add tests for the following:
-		// it("[valid/validAVGTest.json] Valid AVG test (room)", checkQuery);
+		it("[valid/validAVGTest.json] Valid AVG test (room)", checkQuery);
 		// it("[valid/validDirLeft.json] Valid DIR_LEFT test (room)", checkQuery);
 		// it("[valid/validDirRight.json] Valid DIR_RIGHT test (room)", checkQuery);
 		// it("[valid/validDirIn.json] Valid DIR_IN test (room)", checkQuery);

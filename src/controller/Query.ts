@@ -1,3 +1,4 @@
+import Decimal from "decimal.js";
 import { InsightError, InsightResult, ResultTooLargeError } from "./IInsightFacade";
 import { DatasetPersistence, Section, Room } from "./Dataset";
 
@@ -503,40 +504,48 @@ export class QueryEngine {
 
 	private static applyRule(group: (Section | Room)[], rule: ApplyRule, datasetId: string): number {
 		const { field } = QueryEngine.getDatasetAndField(rule.field);
-		const values: any[] = [];
 
+		if (rule.token === "COUNT") {
+			const uniqueValues = new Set<any>();
+			for (const row of group) {
+				const value = row[field as keyof (Section | Room)];
+				uniqueValues.add(value);
+			}
+			return uniqueValues.size;
+		}
+
+		const numericValues: number[] = [];
 		for (const row of group) {
 			const value = row[field as keyof (Section | Room)];
-			if (rule.token === "COUNT") {
-				// COUNT: count unique occurrences
-				if (!values.includes(value)) {
-					values.push(value);
-				}
-			} else {
-				// MAX, MIN, AVG, SUM: need numeric values
-				if (typeof value !== "number") {
-					throw new InsightError(`Field '${field}' is not numeric for ${rule.token}`);
-				}
-				values.push(value);
+			if (typeof value !== "number") {
+				throw new InsightError(`Field '${field}' is not numeric for ${rule.token}`);
 			}
+			numericValues.push(value);
 		}
 
 		switch (rule.token) {
 			case "MAX":
-				return Math.max(...values);
+				return Math.max(...numericValues);
 			case "MIN":
-				return Math.min(...values);
-			case "AVG":
-				return QueryEngine.roundToTwoDecimals(values.reduce((a, b) => a + b, 0) / values.length);
-			case "SUM":
-				return QueryEngine.roundToTwoDecimals(values.reduce((a, b) => a + b, 0));
-			case "COUNT":
-				return values.length;
+				return Math.min(...numericValues);
+			case "AVG": {
+				let total = new Decimal(0);
+				for (const v of numericValues) {
+					total = total.add(new Decimal(v));
+				}
+				const avg = total.toNumber() / numericValues.length;
+				return Number(avg.toFixed(2));
+			}
+			case "SUM": {
+				let sum = 0;
+				for (const v of numericValues) {
+					sum += v;
+				}
+				return Number(sum.toFixed(2));
+			}
 		}
-	}
 
-	private static roundToTwoDecimals(num: number): number {
-		return Math.round(num * 100) / 100;
+		throw new InsightError(`Unsupported APPLY token '${rule.token}'`);
 	}
 
 	private static compareValues(x: any, y: any, ascending: boolean): number {
