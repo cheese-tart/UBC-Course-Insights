@@ -51,10 +51,12 @@ const file: string = directory + "/datasets.json";
 export class DatasetPersistence {
 	private datasets: Dataset[];
 	private dataLoaded: boolean;
+	private loadingPromise: Promise<void> | null;
 
 	constructor() {
 		this.datasets = [];
 		this.dataLoaded = false;
+		this.loadingPromise = null;
 	}
 
 	public addDataset(dataset: Dataset) {
@@ -73,33 +75,67 @@ export class DatasetPersistence {
 		try {
 			await fs.ensureDir(directory);
 			await fs.ensureFile(file);
-			const stats = await fs.stat(file);
-			if (stats.size === 0) {
-				await fs.writeJson(file, []);
-			}
+			// Don't overwrite existing file - let loadData handle empty files
 		} catch (error) {
-			console.error("penis");
+			// Silently fail - persistence directory/file creation issues shouldn't block execution
 		}
 	}
 
 	public async loadData(): Promise<void> {
+		// If already loaded, return immediately
+		if (this.dataLoaded) {
+			return;
+		}
+
+		// If a load is already in progress, wait for it
+		if (this.loadingPromise) {
+			await this.loadingPromise;
+			return;
+		}
+
+		// Start loading - create promise and assign immediately to prevent race conditions
+		const promise = this._doLoadData();
+		this.loadingPromise = promise;
+
+		try {
+			await promise;
+		} finally {
+			// Clear the promise after loading completes (or fails)
+			this.loadingPromise = null;
+		}
+	}
+
+	private async _doLoadData(): Promise<void> {
 		await DatasetPersistence.ensurePersistence();
 
-		if (!this.dataLoaded) {
-			try {
-				this.datasets = await fs.readJson(file);
-				this.dataLoaded = true;
-			} catch (error) {
-				console.error("penis");
+		// Double-check after awaiting (another call might have loaded it)
+		if (this.dataLoaded) {
+			return;
+		}
+
+		try {
+			const data = await fs.readJson(file);
+			// Only set if we successfully read valid data (array)
+			if (Array.isArray(data)) {
+				this.datasets = data;
+			} else {
+				this.datasets = [];
 			}
+			this.dataLoaded = true;
+		} catch (error) {
+			// File doesn't exist or is invalid - use empty array (expected on first run)
+			this.datasets = [];
+			this.dataLoaded = true;
 		}
 	}
 
 	public async saveData(): Promise<void> {
 		try {
-			await fs.writeJson(file, this.datasets);
-		} catch {
-			console.error("penis");
+			await DatasetPersistence.ensurePersistence();
+			await fs.writeJson(file, this.datasets, { spaces: 0 });
+		} catch (error) {
+			// Silently fail - save errors shouldn't break the API
+			// Data remains in memory for the current session
 		}
 	}
 
@@ -435,7 +471,7 @@ export class RoomsDataProcessor {
 							href = RoomsDataProcessor.getHref(cell);
 						}
 					}
-					if (!number || !seats || !furniture || !type || !href) {
+					if (!number || !seats || !furniture || type === null || type === undefined || !href) {
 						continue;
 					}
 					rooms.push({

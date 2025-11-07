@@ -1,0 +1,180 @@
+{
+	"title": "valid MAX test",
+	"input": {
+		"WHERE": {
+			"AND": [
+				{
+					"IS": {
+						"rooms_furniture": "*Tables*"
+					}
+				},
+				{
+					"LT": {
+						"rooms_seats": 100
+					}
+				}
+			]
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"rooms_shortname",
+				"maxSeats"
+			]
+		},
+		"TRANSFORMATIONS": {
+			"GROUP": [
+				"rooms_shortname"
+			],
+			"APPLY": [
+				{
+					"maxSeats": {
+						"MAX": "rooms_seats"
+					}
+				}
+			]
+		}
+	},
+	"errorExpected": false,
+	"expected": [
+		{
+			"rooms_shortname": "ALRD",
+			"maxSeats": 94
+		},
+		{
+			"rooms_shortname": "ANSO",
+			"maxSeats": 37
+		},
+		{
+			"rooms_shortname": "AUDX",
+			"maxSeats": 21
+		},
+		{
+			"rooms_shortname": "BIOL",
+			"maxSeats": 76
+		},
+		{
+			"rooms_shortname": "BRKX",
+			"maxSeats": 70
+		},
+		{
+			"rooms_shortname": "BUCH",
+			"maxSeats": 78
+		},
+		{
+			"rooms_shortname": "CHBE",
+			"maxSeats": 94
+		},
+		{
+			"rooms_shortname": "CEME",
+			"maxSeats": 62
+		},
+		{
+			"rooms_shortname": "EOSM",
+			"maxSeats": 50
+		},
+		{
+			"rooms_shortname": "ESB",
+			"maxSeats": 80
+		},
+		{
+			"rooms_shortname": "FNH",
+			"maxSeats": 28
+		},
+		{
+			"rooms_shortname": "FSC",
+			"maxSeats": 65
+		},
+		{
+			"rooms_shortname": "FORW",
+			"maxSeats": 63
+		},
+		{
+			"rooms_shortname": "LASR",
+			"maxSeats": 80
+		},
+		{
+			"rooms_shortname": "GEOG",
+			"maxSeats": 72
+		},
+		{
+			"rooms_shortname": "HEBB",
+			"maxSeats": 54
+		},
+		{
+			"rooms_shortname": "HENN",
+			"maxSeats": 36
+		},
+		{
+			"rooms_shortname": "ANGU",
+			"maxSeats": 80
+		},
+		{
+			"rooms_shortname": "DMP",
+			"maxSeats": 80
+		},
+		{
+			"rooms_shortname": "IONA",
+			"maxSeats": 50
+		},
+		{
+			"rooms_shortname": "IBLC",
+			"maxSeats": 50
+		},
+		{
+			"rooms_shortname": "SOWK",
+			"maxSeats": 16
+		},
+		{
+			"rooms_shortname": "LSK",
+			"maxSeats": 75
+		},
+		{
+			"rooms_shortname": "MCLD",
+			"maxSeats": 84
+		},
+		{
+			"rooms_shortname": "MCML",
+			"maxSeats": 72
+		},
+		{
+			"rooms_shortname": "MATH",
+			"maxSeats": 60
+		},
+		{
+			"rooms_shortname": "SCRF",
+			"maxSeats": 60
+		},
+		{
+			"rooms_shortname": "ORCH",
+			"maxSeats": 72
+		},
+		{
+			"rooms_shortname": "PHRM",
+			"maxSeats": 72
+		},
+		{
+			"rooms_shortname": "PCOH",
+			"maxSeats": 40
+		},
+		{
+			"rooms_shortname": "OSBO",
+			"maxSeats": 40
+		},
+		{
+			"rooms_shortname": "SPPH",
+			"maxSeats": 66
+		},
+		{
+			"rooms_shortname": "UCLL",
+			"maxSeats": 55
+		},
+		{
+			"rooms_shortname": "SWNG",
+			"maxSeats": 47
+		},
+		{
+			"rooms_shortname": "WOOD",
+			"maxSeats": 88
+		}
+	]
+}

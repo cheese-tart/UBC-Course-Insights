@@ -1,0 +1,192 @@
+{
+	"title": "valid SUM test",
+	"input": {
+		"WHERE": {
+			"AND": [
+				{
+					"IS": {
+						"rooms_furniture": "*Tables*"
+					}
+				},
+				{
+					"GT": {
+						"rooms_lat": 25
+					}
+				}
+			]
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"rooms_shortname",
+				"seat"
+			]
+		},
+		"TRANSFORMATIONS": {
+			"GROUP": [
+				"rooms_shortname"
+			],
+			"APPLY": [
+				{
+					"seat": {
+						"SUM": "rooms_seats"
+					}
+				}
+			]
+		}
+	},
+	"errorExpected": false,
+	"expected": [
+		{
+			"rooms_shortname": "ALRD",
+			"seat": 228
+		},
+		{
+			"rooms_shortname": "ANSO",
+			"seat": 96
+		},
+		{
+			"rooms_shortname": "AUDX",
+			"seat": 41
+		},
+		{
+			"rooms_shortname": "BIOL",
+			"seat": 108
+		},
+		{
+			"rooms_shortname": "BRKX",
+			"seat": 94
+		},
+		{
+			"rooms_shortname": "BUCH",
+			"seat": 1473
+		},
+		{
+			"rooms_shortname": "CHBE",
+			"seat": 354
+		},
+		{
+			"rooms_shortname": "CEME",
+			"seat": 289
+		},
+		{
+			"rooms_shortname": "EOSM",
+			"seat": 50
+		},
+		{
+			"rooms_shortname": "ESB",
+			"seat": 80
+		},
+		{
+			"rooms_shortname": "FNH",
+			"seat": 28
+		},
+		{
+			"rooms_shortname": "FSC",
+			"seat": 272
+		},
+		{
+			"rooms_shortname": "FORW",
+			"seat": 142
+		},
+		{
+			"rooms_shortname": "LASR",
+			"seat": 120
+		},
+		{
+			"rooms_shortname": "FRDM",
+			"seat": 160
+		},
+		{
+			"rooms_shortname": "GEOG",
+			"seat": 394
+		},
+		{
+			"rooms_shortname": "HEBB",
+			"seat": 537
+		},
+		{
+			"rooms_shortname": "HENN",
+			"seat": 96
+		},
+		{
+			"rooms_shortname": "ANGU",
+			"seat": 1546
+		},
+		{
+			"rooms_shortname": "DMP",
+			"seat": 440
+		},
+		{
+			"rooms_shortname": "IONA",
+			"seat": 150
+		},
+		{
+			"rooms_shortname": "IBLC",
+			"seat": 538
+		},
+		{
+			"rooms_shortname": "SOWK",
+			"seat": 44
+		},
+		{
+			"rooms_shortname": "LSK",
+			"seat": 505
+		},
+		{
+			"rooms_shortname": "LSC",
+			"seat": 825
+		},
+		{
+			"rooms_shortname": "MCLD",
+			"seat": 503
+		},
+		{
+			"rooms_shortname": "MCML",
+			"seat": 299
+		},
+		{
+			"rooms_shortname": "MATH",
+			"seat": 156
+		},
+		{
+			"rooms_shortname": "SCRF",
+			"seat": 724
+		},
+		{
+			"rooms_shortname": "ORCH",
+			"seat": 263
+		},
+		{
+			"rooms_shortname": "PHRM",
+			"seat": 538
+		},
+		{
+			"rooms_shortname": "PCOH",
+			"seat": 216
+		},
+		{
+			"rooms_shortname": "OSBO",
+			"seat": 482
+		},
+		{
+			"rooms_shortname": "SPPH",
+			"seat": 166
+		},
+		{
+			"rooms_shortname": "SRC",
+			"seat": 897
+		},
+		{
+			"rooms_shortname": "UCLL",
+			"seat": 133
+		},
+		{
+			"rooms_shortname": "SWNG",
+			"seat": 1421
+		},
+		{
+			"rooms_shortname": "WOOD",
+			"seat": 592
+		}
+	]
+}
