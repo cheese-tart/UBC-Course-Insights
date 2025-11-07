@@ -5,6 +5,7 @@ import fs from "fs-extra";
 import JSZip, { JSZipObject } from "jszip";
 import parse5 from "parse5";
 
+// AI was used to generate the code for the cache implementation and load checks
 export interface Section {
 	uuid: string;
 	id: string;
@@ -75,9 +76,8 @@ export class DatasetPersistence {
 		try {
 			await fs.ensureDir(directory);
 			await fs.ensureFile(file);
-			// Don't overwrite existing file - let loadData handle empty files
 		} catch (error) {
-			// Silently fail - persistence directory/file creation issues shouldn't block execution
+			// nothing
 		}
 	}
 
