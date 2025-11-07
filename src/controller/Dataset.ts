@@ -51,7 +51,6 @@ const file: string = directory + "/datasets.json";
 export class DatasetPersistence {
 	private datasets: Dataset[];
 	private dataLoaded: boolean;
-	private static persistenceEnsured: boolean = false;
 
 	constructor() {
 		this.datasets = [];
@@ -71,9 +70,6 @@ export class DatasetPersistence {
 	}
 
 	private static async ensurePersistence(): Promise<void> {
-		if (DatasetPersistence.persistenceEnsured) {
-			return;
-		}
 		try {
 			await fs.ensureDir(directory);
 			await fs.ensureFile(file);
@@ -81,32 +77,29 @@ export class DatasetPersistence {
 			if (stats.size === 0) {
 				await fs.writeJson(file, []);
 			}
-			DatasetPersistence.persistenceEnsured = true;
 		} catch (error) {
-			// Silently fail - persistence directory/file creation issues shouldn't block execution
-			// The datasets array will remain empty and operations will work in-memory only
+			console.error("penis");
 		}
 	}
 
 	public async loadData(): Promise<void> {
+		await DatasetPersistence.ensurePersistence();
+
 		if (!this.dataLoaded) {
-			await DatasetPersistence.ensurePersistence();
 			try {
 				this.datasets = await fs.readJson(file);
+				this.dataLoaded = true;
 			} catch (error) {
-				// File doesn't exist or is invalid - use empty array (expected on first run)
-				this.datasets = [];
+				console.error("penis");
 			}
-			this.dataLoaded = true;
 		}
 	}
 
 	public async saveData(): Promise<void> {
 		try {
 			await fs.writeJson(file, this.datasets);
-		} catch (error) {
-			// Silently fail - save errors shouldn't break the API
-			// Data remains in memory for the current session
+		} catch {
+			console.error("penis");
 		}
 	}
 
@@ -161,6 +154,8 @@ export class SectionMapper {
 }
 
 export class SectionsDataProcessor {
+	private static cache: Map<string, Section[]> = new Map();
+
 	private static extractCourseFiles(unzipped: JSZip): JSZipObject[] {
 		return Object.values(unzipped.files).filter((file) => !file.dir && file.name.startsWith("courses/"));
 	}
@@ -200,10 +195,24 @@ export class SectionsDataProcessor {
 	}
 
 	public static async getSections(content: string): Promise<any> {
+		// Check cache first
+		if (SectionsDataProcessor.cache.has(content)) {
+			return SectionsDataProcessor.cache.get(content)!;
+		}
+
+		// Process the content
 		const unzipped = await FileUnzipper.unzipData(content);
 		const files = SectionsDataProcessor.extractCourseFiles(unzipped);
 		const sections = await SectionsDataProcessor.processSectionFiles(files);
-		return SectionsDataProcessor.validateSections(sections);
+		const validatedSections = SectionsDataProcessor.validateSections(sections);
+
+		// Cache the result
+		SectionsDataProcessor.cache.set(content, validatedSections);
+		return validatedSections;
+	}
+
+	public static clearCache(): void {
+		SectionsDataProcessor.cache.clear();
 	}
 }
 
@@ -215,6 +224,8 @@ export class BuildingRoomFileParser {
 }
 
 export class RoomsDataProcessor {
+	private static cache: Map<string, Room[]> = new Map();
+
 	private static getTables(doc: any): any[] {
 		const tables: any[] = [];
 		if (doc.nodeName === "table") {
@@ -424,7 +435,7 @@ export class RoomsDataProcessor {
 							href = RoomsDataProcessor.getHref(cell);
 						}
 					}
-					if (!number || !seats || !furniture || type === null || type === undefined || !href) {
+					if (!number || !seats || !furniture || !type || !href) {
 						continue;
 					}
 					rooms.push({
@@ -452,8 +463,22 @@ export class RoomsDataProcessor {
 	}
 
 	public static async getRooms(content: string): Promise<Room[]> {
+		// Check cache first
+		if (RoomsDataProcessor.cache.has(content)) {
+			return RoomsDataProcessor.cache.get(content)!;
+		}
+
+		// Process the content
 		const unzipped = await FileUnzipper.unzipData(content);
 		const buildings = await RoomsDataProcessor.processBuildingFiles(unzipped);
-		return await RoomsDataProcessor.processRoomFiles(buildings, unzipped);
+		const rooms = await RoomsDataProcessor.processRoomFiles(buildings, unzipped);
+
+		// Cache the result
+		RoomsDataProcessor.cache.set(content, rooms);
+		return rooms;
+	}
+
+	public static clearCache(): void {
+		RoomsDataProcessor.cache.clear();
 	}
 }
