@@ -7,16 +7,15 @@ import {
 	NotFoundError,
 	ResultTooLargeError,
 } from "./IInsightFacade";
-import {SectionsDataProcessor, RoomsDataProcessor, Dataset, DatasetPersistence, Section, Room} from "./Dataset";
-import {QueryEngine} from "./Query";
-
+import { Section, Dataset, DatasetPersistence, SectionsDataProcessor, RoomsDataProcessor, Room } from "./Dataset";
+import { QueryEngine } from "./Query";
 /**
  * This is the main programmatic entry point for the project.
  * Method documentation is in IInsightFacade
  *
  */
 export default class InsightFacade implements IInsightFacade {
-	private readonly data: DatasetPersistence;
+	private data: DatasetPersistence;
 
 	constructor() {
 		this.data = new DatasetPersistence();
