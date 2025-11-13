@@ -1,6 +1,6 @@
-import Decimal from "decimal.js";
 import { InsightError, InsightResult, ResultTooLargeError } from "./IInsightFacade";
 import { DatasetPersistence, Section, Room } from "./Dataset";
+import Decimal from "decimal.js";
 
 export const NUMERIC_FIELDS = new Set(["avg", "pass", "fail", "audit", "year", "lat", "lon", "seats"]);
 export const STRING_FIELDS = new Set([
@@ -225,16 +225,12 @@ export class QueryEngine {
 	public static validateSemantics(ast: QueryAST) {
 		const datasetIds = new Set<string>();
 
-		// Helper to collect dataset ID from a key (only if it's a dataset key, not an apply key)
 		const collectKey = (k: string) => {
-			// Check if it's a dataset key (contains underscore) vs apply key
 			if (k.includes("_")) {
 				datasetIds.add(QueryEngine.getDatasetAndField(k).dataset);
 			}
-			// Apply keys don't contribute to dataset ID collection
 		};
 
-		// Collect dataset IDs from columns (only dataset keys, not apply keys)
 		ast.columns.forEach((key) => {
 			if (key.includes("_")) {
 				collectKey(key);
@@ -272,15 +268,12 @@ export class QueryEngine {
 			}
 		});
 
-		// Validate GROUP and APPLY
 		if (ast.transformations) {
-			// Validate GROUP keys
 			ast.transformations.group.forEach((key) => {
 				const { field } = QueryEngine.getDatasetAndField(key);
 				QueryEngine.assert(NUMERIC_FIELDS.has(field) || STRING_FIELDS.has(field), `Invalid GROUP field '${field}'`);
 			});
 
-			// Validate APPLY rules
 			const applyKeys = new Set<string>();
 			ast.transformations.apply.forEach((rule) => {
 				QueryEngine.assert(!applyKeys.has(rule.key), `Duplicate applykey '${rule.key}'`);
@@ -290,10 +283,8 @@ export class QueryEngine {
 				if (rule.token === "MAX" || rule.token === "MIN" || rule.token === "AVG" || rule.token === "SUM") {
 					QueryEngine.assert(NUMERIC_FIELDS.has(field), `${rule.token} must use a numeric field`);
 				}
-				// COUNT can be used on any field
 			});
 
-			// Validate COLUMNS: all keys must be in GROUP or be applykeys
 			const groupSet = new Set(ast.transformations.group);
 			const applyKeySet = new Set(ast.transformations.apply.map((r) => r.key));
 			ast.columns.forEach((key) => {
@@ -303,7 +294,6 @@ export class QueryEngine {
 				);
 			});
 		} else {
-			// No transformations: all columns must be dataset keys
 			ast.columns.forEach((key) => {
 				QueryEngine.assert(
 					key.includes("_"),
@@ -314,12 +304,9 @@ export class QueryEngine {
 			});
 		}
 
-		// Validate SORT keys
 		if (ast.order) {
 			if (typeof ast.order === "string") {
-				// Order key must be in columns and must be valid (dataset key or apply key)
 				QueryEngine.assert(ast.columns.includes(ast.order), "ORDER key must appear in COLUMNS");
-				// If it's a dataset key (has underscore), validate it exists
 				if (ast.order.includes("_")) {
 					const { field } = QueryEngine.getDatasetAndField(ast.order);
 					QueryEngine.assert(NUMERIC_FIELDS.has(field) || STRING_FIELDS.has(field), `Invalid ORDER field '${field}'`);
@@ -327,7 +314,6 @@ export class QueryEngine {
 			} else {
 				ast.order.keys.forEach((key) => {
 					QueryEngine.assert(ast.columns.includes(key), `ORDER key '${key}' must appear in COLUMNS`);
-					// If it's a dataset key (has underscore), validate it exists
 					if (key.includes("_")) {
 						const { field } = QueryEngine.getDatasetAndField(key);
 						QueryEngine.assert(NUMERIC_FIELDS.has(field) || STRING_FIELDS.has(field), `Invalid ORDER field '${field}'`);
@@ -353,10 +339,8 @@ export class QueryEngine {
 	}
 
 	public static async executeQuery(ast: QueryAST, datasets: DatasetPersistence): Promise<InsightResult[]> {
-		// Extract dataset ID from columns, GROUP, or WHERE filters
 		let datasetId: string | null = null;
 
-		// Try to get dataset ID from columns (look for a dataset key, not apply key)
 		for (const key of ast.columns) {
 			if (key.includes("_")) {
 				datasetId = QueryEngine.getDatasetAndField(key).dataset;
@@ -364,7 +348,6 @@ export class QueryEngine {
 			}
 		}
 
-		// If no dataset key in columns, try GROUP keys
 		if (!datasetId && ast.transformations) {
 			for (const key of ast.transformations.group) {
 				if (key.includes("_")) {
@@ -374,7 +357,6 @@ export class QueryEngine {
 			}
 		}
 
-		// If still no dataset ID, try WHERE filters
 		if (!datasetId) {
 			QueryEngine.walkFilter(ast.where, (node) => {
 				if ((node.type === "LT" || node.type === "GT" || node.type === "EQ" || node.type === "IS") && !datasetId) {
@@ -389,10 +371,8 @@ export class QueryEngine {
 			throw new InsightError("Could not determine dataset ID from query");
 		}
 
-		// At this point, datasetId is guaranteed to be a string
 		const finalDatasetId: string = datasetId;
 
-		// Determine dataset type and get rows
 		let rows: (Section | Room)[];
 		try {
 			rows = await datasets.getSectionsById(finalDatasetId);
@@ -404,29 +384,23 @@ export class QueryEngine {
 			}
 		}
 
-		// Filter rows
 		const filtered = rows.filter((r: any) => QueryEngine.evalFilter(ast.where, r, finalDatasetId));
 
 		let projected: InsightResult[];
 
-		// Apply transformations if present
 		if (ast.transformations) {
 			const transformations = ast.transformations;
-			// Group rows
 			const groups = QueryEngine.groupRows(filtered, transformations.group, finalDatasetId);
 
-			// Apply rules to each group
 			const groupedResults: InsightResult[] = [];
 			groups.forEach((group) => {
 				const result: InsightResult = {};
 
-				// Add GROUP keys to result
 				for (const groupKeyField of transformations.group) {
 					const { field } = QueryEngine.getDatasetAndField(groupKeyField);
 					result[groupKeyField] = group[0][field as keyof (Section | Room)] as any;
 				}
 
-				// Apply APPLY rules
 				for (const rule of transformations.apply) {
 					result[rule.key] = QueryEngine.applyRule(group, rule, finalDatasetId);
 				}
@@ -434,7 +408,6 @@ export class QueryEngine {
 				groupedResults.push(result);
 			});
 
-			// Project columns
 			projected = groupedResults.map((r) => {
 				const out: InsightResult = {};
 				for (const key of ast.columns) {
@@ -443,7 +416,6 @@ export class QueryEngine {
 				return out;
 			});
 		} else {
-			// No transformations: project directly
 			projected = filtered.map((r: { [x: string]: any }) => {
 				const out: InsightResult = {};
 				for (const key of ast.columns) {
@@ -454,7 +426,6 @@ export class QueryEngine {
 			});
 		}
 
-		// Sort results
 		if (ast.order) {
 			if (typeof ast.order === "string") {
 				const orderKey = ast.order;
@@ -484,7 +455,6 @@ export class QueryEngine {
 		const groups = new Map<string, (Section | Room)[]>();
 
 		for (const row of rows) {
-			// Create group key by concatenating values of all group keys
 			const groupKeyParts: string[] = [];
 			for (const key of groupKeys) {
 				const { field } = QueryEngine.getDatasetAndField(key);
