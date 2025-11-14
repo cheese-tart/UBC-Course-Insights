@@ -390,7 +390,7 @@ export class QueryEngine {
 
 		if (ast.transformations) {
 			const transformations = ast.transformations;
-			const groups = QueryEngine.groupRows(filtered, transformations.group, finalDatasetId);
+			const groups = QueryEngine.groupRows(filtered, transformations.group);
 
 			const groupedResults: InsightResult[] = [];
 			groups.forEach((group) => {
@@ -402,7 +402,7 @@ export class QueryEngine {
 				}
 
 				for (const rule of transformations.apply) {
-					result[rule.key] = QueryEngine.applyRule(group, rule, finalDatasetId);
+					result[rule.key] = QueryEngine.applyRule(group, rule);
 				}
 
 				groupedResults.push(result);
@@ -449,8 +449,7 @@ export class QueryEngine {
 
 	private static groupRows(
 		rows: (Section | Room)[],
-		groupKeys: string[],
-		datasetId: string
+		groupKeys: string[]
 	): Map<string, (Section | Room)[]> {
 		const groups = new Map<string, (Section | Room)[]>();
 
@@ -472,7 +471,7 @@ export class QueryEngine {
 		return groups;
 	}
 
-	private static applyRule(group: (Section | Room)[], rule: ApplyRule, datasetId: string): number {
+	private static applyRule(group: (Section | Room)[], rule: ApplyRule): number {
 		const { field } = QueryEngine.getDatasetAndField(rule.field);
 
 		if (rule.token === "COUNT") {
@@ -487,9 +486,6 @@ export class QueryEngine {
 		const numericValues: number[] = [];
 		for (const row of group) {
 			const value = row[field as keyof (Section | Room)];
-			if (typeof value !== "number") {
-				throw new InsightError(`Field '${field}' is not numeric for ${rule.token}`);
-			}
 			numericValues.push(value);
 		}
 
@@ -514,8 +510,6 @@ export class QueryEngine {
 				return Number(sum.toFixed(2));
 			}
 		}
-
-		throw new InsightError(`Unsupported APPLY token '${rule.token}'`);
 	}
 
 	private static compareValues(x: any, y: any, ascending: boolean): number {

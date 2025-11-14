@@ -15,7 +15,7 @@ import { QueryEngine } from "./Query";
  *
  */
 export default class InsightFacade implements IInsightFacade {
-	private data: DatasetPersistence;
+	private readonly data: DatasetPersistence;
 
 	constructor() {
 		this.data = new DatasetPersistence();
