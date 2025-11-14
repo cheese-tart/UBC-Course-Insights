@@ -229,7 +229,6 @@ export class SectionsDataProcessor {
 		const sections = await SectionsDataProcessor.processSectionFiles(files);
 		const validatedSections = SectionsDataProcessor.validateSections(sections);
 
-		// Cache the result
 		SectionsDataProcessor.cache.set(content, validatedSections);
 		return validatedSections;
 	}
@@ -482,7 +481,6 @@ export class RoomsDataProcessor {
 	}
 
 	public static async getRooms(content: string): Promise<Room[]> {
-		// Check cache first
 		if (RoomsDataProcessor.cache.has(content)) {
 			return RoomsDataProcessor.cache.get(content)!;
 		}
