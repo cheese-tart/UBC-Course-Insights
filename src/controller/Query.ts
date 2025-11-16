@@ -135,16 +135,16 @@ export class QueryEngine {
 			for (const rule of applyRaw) {
 				const ruleObj = rule as Record<string, unknown>;
 				QueryEngine.assert(Object.keys(ruleObj).length === 1, "APPLY rule must have exactly one key");
-				const applykey = Object.keys(ruleObj)[0];
-				QueryEngine.assert(QueryEngine.isObject(ruleObj[applykey]), "APPLY rule value must be an object");
-				const applyValue = ruleObj[applykey] as Record<string, unknown>;
+				const applyKey = Object.keys(ruleObj)[0];
+				QueryEngine.assert(QueryEngine.isObject(ruleObj[applyKey]), "APPLY rule value must be an object");
+				const applyValue = ruleObj[applyKey] as Record<string, unknown>;
 				QueryEngine.assert(Object.keys(applyValue).length === 1, "APPLY rule value must have exactly one key");
 				const token = Object.keys(applyValue)[0];
 				QueryEngine.assert(["MAX", "MIN", "AVG", "COUNT", "SUM"].includes(token), `Invalid APPLY token '${token}'`);
 				const field = applyValue[token];
 				QueryEngine.assert(typeof field === "string", "APPLY field must be a string");
 				applyRules.push({
-					key: applykey,
+					key: applyKey,
 					token: token as "MAX" | "MIN" | "AVG" | "COUNT" | "SUM",
 					field: field as string,
 				});
@@ -276,7 +276,7 @@ export class QueryEngine {
 
 			const applyKeys = new Set<string>();
 			ast.transformations.apply.forEach((rule) => {
-				QueryEngine.assert(!applyKeys.has(rule.key), `Duplicate applykey '${rule.key}'`);
+				QueryEngine.assert(!applyKeys.has(rule.key), `Duplicate apply key '${rule.key}'`);
 				applyKeys.add(rule.key);
 
 				const { field } = QueryEngine.getDatasetAndField(rule.field);
@@ -290,7 +290,7 @@ export class QueryEngine {
 			ast.columns.forEach((key) => {
 				QueryEngine.assert(
 					groupSet.has(key) || applyKeySet.has(key),
-					`COLUMNS key '${key}' must be in GROUP or be an applykey`
+					`COLUMNS key '${key}' must be in GROUP or be an apply key`
 				);
 			});
 		} else {
