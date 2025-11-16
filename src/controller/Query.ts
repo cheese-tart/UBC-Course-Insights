@@ -2,6 +2,7 @@ import { InsightError, InsightResult, ResultTooLargeError } from "./IInsightFaca
 import { DatasetPersistence, Section, Room } from "./Dataset";
 import Decimal from "decimal.js";
 
+// AI was used to generate the skeleton of the code and some major functionality for the query engine and validation
 export const NUMERIC_FIELDS = new Set(["avg", "pass", "fail", "audit", "year", "lat", "lon", "seats"]);
 export const STRING_FIELDS = new Set([
 	"dept",

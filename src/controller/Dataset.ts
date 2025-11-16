@@ -5,6 +5,7 @@ import fs from "fs-extra";
 import JSZip, { JSZipObject } from "jszip";
 import parse5 from "parse5";
 
+// AI was used to generate code for load checks
 export interface Section {
 	uuid: string;
 	id: string;
@@ -76,6 +77,7 @@ export class DatasetPersistence {
 			await fs.ensureDir(directory);
 			await fs.ensureFile(file);
 		} catch (error) {
+			// nothing
 		}
 	}
 
@@ -125,6 +127,7 @@ export class DatasetPersistence {
 			await DatasetPersistence.ensurePersistence();
 			await fs.writeJson(file, this.datasets, { spaces: 0 });
 		} catch (error) {
+			// nothing
 		}
 	}
 
