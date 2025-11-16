@@ -179,8 +179,6 @@ export class SectionMapper {
 }
 
 export class SectionsDataProcessor {
-	private static cache: Map<string, Section[]> = new Map();
-
 	private static extractCourseFiles(unzipped: JSZip): JSZipObject[] {
 		return Object.values(unzipped.files).filter((file) => !file.dir && file.name.startsWith("courses/"));
 	}
@@ -220,17 +218,10 @@ export class SectionsDataProcessor {
 	}
 
 	public static async getSections(content: string): Promise<any> {
-		if (SectionsDataProcessor.cache.has(content)) {
-			return SectionsDataProcessor.cache.get(content)!;
-		}
-
 		const unzipped = await FileUnzipper.unzipData(content);
 		const files = SectionsDataProcessor.extractCourseFiles(unzipped);
 		const sections = await SectionsDataProcessor.processSectionFiles(files);
-		const validatedSections = SectionsDataProcessor.validateSections(sections);
-
-		SectionsDataProcessor.cache.set(content, validatedSections);
-		return validatedSections;
+		return SectionsDataProcessor.validateSections(sections);
 	}
 }
 
@@ -242,8 +233,6 @@ export class BuildingRoomFileParser {
 }
 
 export class RoomsDataProcessor {
-	private static cache: Map<string, Room[]> = new Map();
-
 	private static getTables(doc: any): any[] {
 		const tables: any[] = [];
 		if (doc.nodeName === "table") {
@@ -481,15 +470,8 @@ export class RoomsDataProcessor {
 	}
 
 	public static async getRooms(content: string): Promise<Room[]> {
-		if (RoomsDataProcessor.cache.has(content)) {
-			return RoomsDataProcessor.cache.get(content)!;
-		}
-
 		const unzipped = await FileUnzipper.unzipData(content);
 		const buildings = await RoomsDataProcessor.processBuildingFiles(unzipped);
-		const rooms = await RoomsDataProcessor.processRoomFiles(buildings, unzipped);
-
-		RoomsDataProcessor.cache.set(content, rooms);
-		return rooms;
+		return await RoomsDataProcessor.processRoomFiles(buildings, unzipped);
 	}
 }
