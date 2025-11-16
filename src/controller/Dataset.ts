@@ -5,7 +5,7 @@ import fs from "fs-extra";
 import JSZip, { JSZipObject } from "jszip";
 import parse5 from "parse5";
 
-// AI was used to generate code for load checks
+// AI was used to generate the code for the cache implementation inside RoomsDataProcessor and load checks
 export interface Section {
 	uuid: string;
 	id: string;
@@ -236,6 +236,8 @@ export class BuildingRoomFileParser {
 }
 
 export class RoomsDataProcessor {
+	private static cache: Map<string, Room[]> = new Map();
+
 	private static getTables(doc: any): any[] {
 		const tables: any[] = [];
 		if (doc.nodeName === "table") {
@@ -473,8 +475,15 @@ export class RoomsDataProcessor {
 	}
 
 	public static async getRooms(content: string): Promise<Room[]> {
+		if (RoomsDataProcessor.cache.has(content)) {
+			return RoomsDataProcessor.cache.get(content)!;
+		}
+
 		const unzipped = await FileUnzipper.unzipData(content);
 		const buildings = await RoomsDataProcessor.processBuildingFiles(unzipped);
-		return await RoomsDataProcessor.processRoomFiles(buildings, unzipped);
+		const rooms = await RoomsDataProcessor.processRoomFiles(buildings, unzipped);
+
+		RoomsDataProcessor.cache.set(content, rooms);
+		return rooms;
 	}
 }

@@ -33,7 +33,7 @@ describe("InsightFacade", function () {
 	let invalidSections: string;
 	let smallerSections: string;
 	let invalidJson: string;
-	let nocoursesfolder: string;
+	let noCoursesFolder: string;
 	let campus: string;
 	let campusSubset: string;
 	before(async function () {
@@ -45,7 +45,7 @@ describe("InsightFacade", function () {
 		invalidSections = await getContentFromArchives("invalidsections.zip");
 		smallerSections = await getContentFromArchives("ihate310.zip");
 		invalidJson = await getContentFromArchives("invalidjson.zip");
-		nocoursesfolder = await getContentFromArchives("nocoursestest.zip");
+		noCoursesFolder = await getContentFromArchives("nocoursestest.zip");
 		campus = await getContentFromArchives("campus.zip");
 		campusSubset = await getContentFromArchives("campus_subset.zip");
 		singleRoom = await getContentFromArchives("single_room.zip");
@@ -91,19 +91,22 @@ describe("InsightFacade", function () {
 				const result = await facade.addDataset("idk", singleCourse, InsightDatasetKind.Sections);
 				expect(result).to.be.lengthOf(1);
 				expect(result[0]).to.be.equal("idk");
+				expect(result).to.have.deep.members(["idk"]);
 			} catch (_err) {
 				expect.fail("Error not expected.");
 			}
 		});
 
-		// it("should accept valid dataset id (room)", async function () {
-		// 	try {
-		// 		const result = await facade.addDataset("idk", campus, InsightDatasetKind.Rooms);
-		// 		expect(result).to.have.deep.members(["idk"]);
-		// 	} catch (_err) {
-		// 		expect.fail("Error not expected.");
-		// 	}
-		// });
+		it("should accept valid dataset id (room)", async function () {
+			try {
+				const result = await facade.addDataset("idk", campus, InsightDatasetKind.Rooms);
+				expect(result).to.be.lengthOf(1);
+				expect(result[0]).to.be.equal("idk");
+				expect(result).to.have.deep.members(["idk"]);
+			} catch (_err) {
+				expect.fail("Error not expected.");
+			}
+		});
 
 		it("should accept using diff ids", async function () {
 			try {
@@ -121,21 +124,21 @@ describe("InsightFacade", function () {
 			}
 		});
 
-		// it("should accept using diff ids (room)", async function () {
-		// 	try {
-		// 		await facade.addDataset("one", singleRoom, InsightDatasetKind.Rooms);
-		// 	} catch (_err) {
-		// 		expect.fail("Error not expected");
-		// 	}
-		// 	try {
-		// 		const result = await facade.addDataset("two", singleRoom, InsightDatasetKind.Rooms);
-		// 		expect(result).to.be.lengthOf(2);
-		// 		expect(result[0]).to.be.equal("one");
-		// 		expect(result[1]).to.be.equal("two");
-		// 	} catch (_e) {
-		// 		expect.fail("Error not expected");
-		// 	}
-		// });
+		it("should accept using diff ids (room)", async function () {
+			try {
+				await facade.addDataset("one", campus, InsightDatasetKind.Rooms);
+			} catch (_err) {
+				expect.fail("Error not expected");
+			}
+			try {
+				const result = await facade.addDataset("two", campusSubset, InsightDatasetKind.Rooms);
+				expect(result).to.be.lengthOf(2);
+				expect(result[0]).to.be.equal("one");
+				expect(result[1]).to.be.equal("two");
+			} catch (_e) {
+				expect.fail("Error not expected");
+			}
+		});
 
 		it("should reject using same id", async function () {
 			try {
@@ -207,7 +210,7 @@ describe("InsightFacade", function () {
 
 		it("should reject on a dataset with a folder not named courses", async function () {
 			try {
-				await facade.addDataset("validid", nocoursesfolder, InsightDatasetKind.Sections);
+				await facade.addDataset("validid", noCoursesFolder, InsightDatasetKind.Sections);
 				expect.fail("No courses folder found in file");
 			} catch (err) {
 				expect(err).to.be.an.instanceOf(InsightError);
@@ -278,15 +281,15 @@ describe("InsightFacade", function () {
 			}
 		});
 
-		// it("should accept a dataset with a new unique id (room)", async function () {
-		// 	try {
-		// 		const result = await facade.addDataset("ubc", singleRoom, InsightDatasetKind.Rooms);
-		// 		// expected behaviour, fine
-		// 		expect(result).to.deep.equal(["ubc"]);
-		// 	} catch {
-		// 		expect.fail("Was not expecting an error");
-		// 	}
-		// });
+		it("should accept a dataset with a new unique id (room)", async function () {
+			try {
+				const result = await facade.addDataset("ubc", campus, InsightDatasetKind.Rooms);
+				// expected behaviour, fine
+				expect(result).to.deep.equal(["ubc"]);
+			} catch {
+				expect.fail("Was not expecting an error");
+			}
+		});
 
 		it("should accept a dataset with a new unique id with already existing datasets", async function () {
 			try {
@@ -299,16 +302,16 @@ describe("InsightFacade", function () {
 			}
 		});
 
-		// it("should accept a dataset with a new unique id with already existing datasets (room)", async function () {
-		// 	try {
-		// 		await facade.addDataset("sfu", singleRoom, InsightDatasetKind.Rooms);
-		// 		const result = await facade.addDataset("ubc", singleRoom, InsightDatasetKind.Rooms);
-		// 		// expected behaviour, fine
-		// 		expect(result).to.deep.equal(["sfu", "ubc"]);
-		// 	} catch {
-		// 		expect.fail("Was not expecting an error");
-		// 	}
-		// });
+		it("should accept a dataset with a new unique id with already existing datasets (room)", async function () {
+			try {
+				await facade.addDataset("sfu", campus, InsightDatasetKind.Rooms);
+				const result = await facade.addDataset("ubc", campusSubset, InsightDatasetKind.Rooms);
+				// expected behaviour, fine
+				expect(result).to.deep.equal(["sfu", "ubc"]);
+			} catch {
+				expect.fail("Was not expecting an error");
+			}
+		});
 
 		// add more tests for adding multiple datasets
 		it("should reject a dataset with a repeated id with already existing datasets", async function () {
@@ -323,16 +326,16 @@ describe("InsightFacade", function () {
 			}
 		});
 
-		// it("should reject a dataset with a repeated id with already existing datasets (room)", async function () {
-		// 	try {
-		// 		await facade.addDataset("sfu", singleRoom, InsightDatasetKind.Rooms);
-		// 		await facade.addDataset("ubc", singleRoom, InsightDatasetKind.Rooms);
-		// 		await facade.addDataset("sfu", singleRoom, InsightDatasetKind.Rooms);
-		// 		expect.fail("Should've thrown");
-		// 	} catch (err) {
-		// 		expect(err).to.be.an.instanceOf(InsightError);
-		// 	}
-		// });
+		it("should reject a dataset with a repeated id with already existing datasets (room)", async function () {
+			try {
+				await facade.addDataset("sfu", campus, InsightDatasetKind.Rooms);
+				await facade.addDataset("ubc", campusSubset, InsightDatasetKind.Rooms);
+				await facade.addDataset("sfu", singleRoom, InsightDatasetKind.Rooms);
+				expect.fail("Should've thrown");
+			} catch (err) {
+				expect(err).to.be.an.instanceOf(InsightError);
+			}
+		});
 
 		// TODO: implement test case with a different valid dataset
 		it("should reject a dataset with a repeat id from another dataset w same id ", async function () {
@@ -347,17 +350,17 @@ describe("InsightFacade", function () {
 			}
 		});
 
-		// it("should reject a dataset with a repeat id from another dataset w same id (room)", async function () {
-		// 	try {
-		// 		await facade.addDataset("sfu", singleRoom, InsightDatasetKind.Rooms);
-		// 		await facade.addDataset("sfu", campusSubset, InsightDatasetKind.Rooms);
-		// 		expect.fail("Should reject on repeated id even with diff datasets");
-		// 		// expected behaviour, fine
-		// 		// expect(result).to.have.deep.members(["ubc", "sfu"]);
-		// 	} catch (err) {
-		// 		expect(err).to.be.instanceOf(InsightError);
-		// 	}
-		// });
+		it("should reject a dataset with a repeat id from another dataset w same id (room)", async function () {
+			try {
+				await facade.addDataset("sfu", campus, InsightDatasetKind.Rooms);
+				await facade.addDataset("sfu", campusSubset, InsightDatasetKind.Rooms);
+				expect.fail("Should reject on repeated id even with diff datasets");
+				// expected behaviour, fine
+				// expect(result).to.have.deep.members(["ubc", "sfu"]);
+			} catch (err) {
+				expect(err).to.be.instanceOf(InsightError);
+			}
+		});
 
 		it("should accept on with a unique id from another dataset ", async function () {
 			try {
@@ -371,16 +374,16 @@ describe("InsightFacade", function () {
 			}
 		});
 
-		// it("should accept adding a rooms dataset", async function () {
-		// 	try {
-		// 		const result = await facade.addDataset("campus", singleRoom, InsightDatasetKind.Rooms);
-		// 		expect(result).to.have.deep.members(["campus"]);
-		// 		expect(result).to.be.lengthOf(1);
-		// 		expect(result[0]).to.be.equal("campus");
-		// 	} catch (err) {
-		// 		expect.fail("Error not expected");
-		// 	}
-		// });
+		it("should accept adding a rooms dataset", async function () {
+			try {
+				const result = await facade.addDataset("campus", campus, InsightDatasetKind.Rooms);
+				expect(result).to.have.deep.members(["campus"]);
+				expect(result).to.be.lengthOf(1);
+				expect(result[0]).to.be.equal("campus");
+			} catch (err) {
+				expect.fail("Error not expected");
+			}
+		});
 	});
 
 	describe("RemoveDataset", function () {
@@ -512,15 +515,15 @@ describe("InsightFacade", function () {
 			}
 		});
 
-		// it("should accept removing a rooms dataset", async function () {
-		// 	try {
-		// 		await facade.addDataset("campus", campus, InsightDatasetKind.Rooms);
-		// 		const result = await facade.removeDataset("campus");
-		// 		expect(result).to.equal("campus");
-		// 	} catch {
-		// 		expect.fail("should've passed");
-		// 	}
-		// });
+		it("should accept removing a rooms dataset", async function () {
+			try {
+				await facade.addDataset("campus", campus, InsightDatasetKind.Rooms);
+				const result = await facade.removeDataset("campus");
+				expect(result).to.equal("campus");
+			} catch {
+				expect.fail("should've passed");
+			}
+		});
 	});
 
 	describe("listDatasets", function () {
@@ -536,12 +539,12 @@ describe("InsightFacade", function () {
 			expect(datasets).to.deep.equal([{ id: "idk", kind: InsightDatasetKind.Sections, numRows: 58 }]);
 		});
 
-		// it("should list one dataset (room)", async function () {
-		// 	await facade.addDataset("idk", campus, InsightDatasetKind.Rooms);
-		// 	const datasets = await facade.listDatasets();
-		// 	expect(datasets).to.be.length(1);
-		// 	expect(datasets).to.deep.equal([{ id: "idk", kind: InsightDatasetKind.Rooms, numRows: 364 }]);
-		// });
+		it("should list one dataset (room)", async function () {
+			await facade.addDataset("idk", campus, InsightDatasetKind.Rooms);
+			const datasets = await facade.listDatasets();
+			expect(datasets).to.be.length(1);
+			expect(datasets).to.deep.equal([{ id: "idk", kind: InsightDatasetKind.Rooms, numRows: 364 }]);
+		});
 
 		it("should accept on no datasets added", async function () {
 			try {
@@ -562,15 +565,15 @@ describe("InsightFacade", function () {
 			}
 		});
 
-		// it("should accept on one previously existing dataset (room)", async function () {
-		// 	try {
-		// 		await facade.addDataset("ubc", campus, InsightDatasetKind.Rooms);
-		// 		const result = await facade.listDatasets();
-		// 		expect(result).to.deep.equal([{ id: "ubc", kind: InsightDatasetKind.Rooms, numRows: 364 }]);
-		// 	} catch {
-		// 		expect.fail("should've passed");
-		// 	}
-		// });
+		it("should accept on one previously existing dataset (room)", async function () {
+			try {
+				await facade.addDataset("ubc", campus, InsightDatasetKind.Rooms);
+				const result = await facade.listDatasets();
+				expect(result).to.deep.equal([{ id: "ubc", kind: InsightDatasetKind.Rooms, numRows: 364 }]);
+			} catch {
+				expect.fail("should've passed");
+			}
+		});
 
 		it("should accept on multiple existing datasets", async function () {
 			try {
@@ -586,19 +589,19 @@ describe("InsightFacade", function () {
 			}
 		});
 
-		// it("should accept on multiple existing datasets (room)", async function () {
-		// 	try {
-		// 		await facade.addDataset("ubc", campus, InsightDatasetKind.Rooms);
-		// 		await facade.addDataset("sfu", campus, InsightDatasetKind.Rooms);
-		// 		const result = await facade.listDatasets();
-		// 		expect(result).to.deep.equal([
-		// 			{ id: "ubc", kind: InsightDatasetKind.Rooms, numRows: 364 },
-		// 			{ id: "sfu", kind: InsightDatasetKind.Rooms, numRows: 364 },
-		// 		]);
-		// 	} catch {
-		// 		expect.fail("should've passed");
-		// 	}
-		// });
+		it("should accept on multiple existing datasets (room)", async function () {
+			try {
+				await facade.addDataset("ubc", campus, InsightDatasetKind.Rooms);
+				await facade.addDataset("sfu", singleRoom, InsightDatasetKind.Rooms);
+				const result = await facade.listDatasets();
+				expect(result).to.deep.equal([
+					{ id: "ubc", kind: InsightDatasetKind.Rooms, numRows: 364 },
+					{ id: "sfu", kind: InsightDatasetKind.Rooms, numRows: 1 },
+				]);
+			} catch {
+				expect.fail("should've passed");
+			}
+		});
 	});
 
 	describe("PerformQuery", function () {
@@ -760,8 +763,8 @@ describe("InsightFacade", function () {
 		it("[valid/validSUMTest.json] Valid SUM test (room)", checkQuery);
 		it("[valid/validDirDown.json] Valid DIR_DOWN test (room)", checkQuery);
 		it("[valid/validDirUp.json] Valid DIR_UP test (room)", checkQuery);
-		// TODO: add tests for the following:
 		it("[valid/validAVGTest.json] Valid AVG test (room)", checkQuery);
+		// TODO: add tests for the following:
 		// it("[valid/validDirLeft.json] Valid DIR_LEFT test (room)", checkQuery);
 		// it("[valid/validDirRight.json] Valid DIR_RIGHT test (room)", checkQuery);
 		// it("[valid/validDirIn.json] Valid DIR_IN test (room)", checkQuery);
@@ -772,6 +775,5 @@ describe("InsightFacade", function () {
 		// it("[valid/validGROUPTest.json] Valid GROUP test (room)", checkQuery);
 		// it("[valid/validORDERTest.json] Valid ORDER test (room)", checkQuery);
 		// it("[valid/validTRANSFORMTest.json] Valid TRANSFORM test (room)", checkQuery);
-		// invalid
 	});
 });
