@@ -78,11 +78,10 @@ export default class Server {
 	}
 
 	private async putDataset(req: Request, res: Response): Promise<void> {
+		if (req.params.kind !== InsightDatasetKind.Rooms && req.params.kind !== InsightDatasetKind.Sections) {
+			throw new InsightError("Invalid dataset kind");
+		}
 		try {
-			Log.info();
-			if (req.params.kind !== InsightDatasetKind.Rooms && req.params.kind !== InsightDatasetKind.Sections) {
-				throw new InsightError("Invalid dataset kind");
-			}
 			const content: string = req.body.toString("base64");
 			const response = await this.facade.addDataset(req.params.id, content, req.params.kind as InsightDatasetKind);
 			res.status(StatusCodes.OK).json({result: response});
