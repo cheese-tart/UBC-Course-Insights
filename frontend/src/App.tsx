@@ -8,8 +8,4 @@ function App() {
 	);
 }
 
-async function addDataset(): Promise<void> {
-
-}
-
 export default App;

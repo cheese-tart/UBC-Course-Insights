@@ -7,7 +7,8 @@ import * as http from "http";
 import {
 	InsightDatasetKind,
 	InsightDataset,
-	NotFoundError
+	NotFoundError,
+	InsightError
 } from "../controller/IInsightFacade";
 import InsightFacade from "../controller/InsightFacade";
 
@@ -37,10 +38,10 @@ export default class Server {
 	}
 
 	private registerRoutes(): void {
-		this.express.put("/dataset/:id/:kind", this.putDataset);
-		this.express.delete("dataset/:id", this.deleteDataset);
-		this.express.get("/datasets", this.getDatasets);
-		this.express.put("/query", this.postQuery);
+		this.express.put("/dataset/:id/:kind", this.putDataset.bind(this));
+		this.express.delete("/dataset/:id", this.deleteDataset.bind(this));
+		this.express.get("/datasets", this.getDatasets.bind(this));
+		this.express.post("/query", this.postQuery.bind(this));
 	}
 
 	public async start(): Promise<void> {
@@ -79,7 +80,11 @@ export default class Server {
 	private async putDataset(req: Request, res: Response): Promise<void> {
 		try {
 			Log.info();
-			const response = await this.facade.addDataset(req.params.id, req.params.kind, req.body);
+			if (req.params.kind !== InsightDatasetKind.Rooms && req.params.kind !== InsightDatasetKind.Sections) {
+				throw new InsightError("Invalid dataset kind");
+			}
+			const content: string = req.body.toString("base64");
+			const response = await this.facade.addDataset(req.params.id, content, req.params.kind as InsightDatasetKind);
 			res.status(StatusCodes.OK).json({result: response});
 		} catch (err) {
 			Log.error();
@@ -114,7 +119,7 @@ export default class Server {
 	private async postQuery(req: Request, res: Response): Promise<void> {
 		try {
 			Log.info();
-			const response = this.facade.performQuery(req.body);
+			const response = await this.facade.performQuery(req.body);
 			res.status(StatusCodes.OK).json({result: response});
 		} catch (err) {
 			Log.error();
