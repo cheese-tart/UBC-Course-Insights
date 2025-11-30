@@ -1,3 +1,7 @@
+body {
+	justify-content: center;
+}
+
 .app-container {
 	max-width: 1800px;
 	margin: 0 auto;
@@ -36,12 +40,14 @@ h2 {
 	font-size: 2em;
 	margin-bottom: 1rem;
 	color: #646cff;
+	text-align: center;
 }
 
 h3 {
 	font-size: 1.5em;
 	margin-bottom: 1rem;
-	color: rgba(255, 255, 255, 0.87);
+	color: #646cff;
+	text-align: center;
 }
 
 /* Dataset Management Section */
@@ -180,6 +186,18 @@ h3 {
 	border-color: #646cff;
 }
 
+.dataset-card.active {
+	background-color: #0a0a0a;
+	border-radius: 8px;
+	padding: 1.5rem;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	gap: 1rem;
+	transition: border-color 0.25s;
+	border-color: #646cff;
+}
+
 .dataset-info {
 	display: flex;
 	flex-direction: column;
@@ -249,7 +267,7 @@ h3 {
 	width: 100%;
 	min-height: 200px;
 	padding: 1rem;
-	font-family: 'Courier New', monospace;
+	font-family: "Courier New", monospace;
 	font-size: 0.95em;
 	border-radius: 8px;
 	border: 1px solid #444;
@@ -294,7 +312,6 @@ h3 {
 	border-radius: 8px;
 	margin-bottom: 2rem;
 }
-
 
 .no-results {
 	padding: 3rem;
@@ -453,7 +470,7 @@ h3 {
 	padding: 1rem;
 	border-radius: 6px;
 	overflow-x: auto;
-	font-family: 'Courier New', monospace;
+	font-family: "Courier New", monospace;
 	font-size: 0.9em;
 	line-height: 1.6;
 	color: #a8d8ff;

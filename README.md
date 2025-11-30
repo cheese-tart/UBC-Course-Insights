@@ -34,6 +34,18 @@ In the project folder:
 
 1. `yarn lint:check` to see lint errors in your project code. You may be able to fix some of them using the `yarn lint:fix` command.
 
+## Extra instructions for TA
+
+```bash
+# Start server
+yarn start
+
+# Navigate to frontend
+cd frontend
+
+# Start React app
+yarn dev
+```
 
 If you are curious, some of these commands are actually shortcuts defined in [package.json -> scripts](./package.json).
 

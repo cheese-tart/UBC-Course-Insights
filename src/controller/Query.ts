@@ -448,10 +448,7 @@ export class QueryEngine {
 		return projected;
 	}
 
-	private static groupRows(
-		rows: (Section | Room)[],
-		groupKeys: string[]
-	): Map<string, (Section | Room)[]> {
+	private static groupRows(rows: (Section | Room)[], groupKeys: string[]): Map<string, (Section | Room)[]> {
 		const groups = new Map<string, (Section | Room)[]>();
 
 		for (const row of rows) {
