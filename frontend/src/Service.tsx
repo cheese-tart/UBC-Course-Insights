@@ -3,19 +3,38 @@ import type { InsightDataset, InsightResult } from "../../src/controller/IInsigh
 const BASE_URL = "http://localhost:50067";
 
 export async function putDataset(id: string, kind: string, file: File): Promise<string[]> {
-	const res = await fetch(`${BASE_URL}/dataset/${id}/${kind}`, {
-		method: "PUT",
-		headers: {
-			"Content-Type": "application/zip"
-		},
-		body: await file.arrayBuffer()
-	});
+	try {
+		const res = await fetch(`${BASE_URL}/dataset/${id}/${kind}`, {
+			method: "PUT",
+			headers: {
+				"Content-Type": "application/zip"
+			},
+			body: await file.arrayBuffer()
+		});
 
-	const json = await res.json();
-	if (json.error) {
-		throw new Error(json.error);
+		if (!res.ok) {
+			const errorText = await res.text();
+			let errorMessage;
+			try {
+				const errorJson = JSON.parse(errorText);
+				errorMessage = errorJson.error || `Server error: ${res.status} ${res.statusText}`;
+			} catch {
+				errorMessage = `Server error: ${res.status} ${res.statusText}`;
+			}
+			throw new Error(errorMessage);
+		}
+
+		const json = await res.json();
+		if (json.error) {
+			throw new Error(json.error);
+		}
+		return json.result as string[];
+	} catch (err) {
+		if (err instanceof TypeError && err.message.includes('fetch')) {
+			throw new Error(`Cannot connect to backend server at ${BASE_URL}. Please ensure the backend server is running on port 50067.`);
+		}
+		throw err;
 	}
-	return json.result as string[];
 }
 
 export async function deleteDataset(id: string): Promise<string> {
@@ -34,16 +53,35 @@ export async function deleteDataset(id: string): Promise<string> {
 }
 
 export async function requestDatasets(): Promise<InsightDataset[]> {
-	const res = await fetch(`${BASE_URL}/datasets`, {
-		method: `GET`
-	});
+	try {
+		const res = await fetch(`${BASE_URL}/datasets`, {
+			method: `GET`
+		});
 
-	const json = await res.json();
-	if (json.error) {
-		throw new Error(json.error);
+		if (!res.ok) {
+			const errorText = await res.text();
+			let errorMessage;
+			try {
+				const errorJson = JSON.parse(errorText);
+				errorMessage = errorJson.error || `Server error: ${res.status} ${res.statusText}`;
+			} catch {
+				errorMessage = `Server error: ${res.status} ${res.statusText}`;
+			}
+			throw new Error(errorMessage);
+		}
+
+		const json = await res.json();
+		if (json.error) {
+			throw new Error(json.error);
+		}
+
+		return json.result as InsightDataset[];
+	} catch (err) {
+		if (err instanceof TypeError && err.message.includes('fetch')) {
+			throw new Error(`Cannot connect to backend server at ${BASE_URL}. Please ensure the backend server is running on port 50067.`);
+		}
+		throw err;
 	}
-
-	return json.result as InsightDataset[];
 }
 
 export async function postQuery(query: unknown): Promise<InsightResult[]> {

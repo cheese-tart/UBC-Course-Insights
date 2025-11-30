@@ -35,6 +35,11 @@ export class App {
 Log.info("App - starting");
 const app = new App();
 (async (): Promise<void> => {
-	const port = envVars.MAIN_PORT;
-	await app.initServer(port);
+	const port = envVars.MAIN_PORT ? Number(envVars.MAIN_PORT) : 50067;
+	if (!port || isNaN(port)) {
+		console.error("Invalid port number. Using default port 50067.");
+		await app.initServer(50067);
+	} else {
+		await app.initServer(port);
+	}
 })();
