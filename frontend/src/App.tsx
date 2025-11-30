@@ -165,6 +165,15 @@ function App() {
 							"&:hover .MuiOutlinedInput-notchedOutline": {
 								borderColor: "#646cff",
 							},
+							"& .MuiSelect-icon": {
+								color: "gray",
+							},
+							"&.Mui-focused .MuiSelect-icon": {
+								color: "#646cff",
+							},
+							"&:hover .MuiSelect-icon": {
+								color: "#646cff",
+							},
 						}}
 						value={query}
 						onChange={(e) => setQuery(e.target.value as any)}
