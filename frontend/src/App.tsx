@@ -1,12 +1,16 @@
-import { useState, useEffect } from "react";
-import { Stack, FormControl, InputLabel, Select, MenuItem, TextField, Grid } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { Stack, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import { Chart as ChartJS, CategoryScale } from "chart.js/auto";
-import { Bar } from "react-chartjs-2";
 
 import "./App.css";
-import { postQuery, putDataset, deleteDataset, requestDatasets } from "./Service";
-import type { InsightResult, InsightDataset } from "../../src/controller/IInsightFacade.ts";
+import { putDataset, deleteDataset, requestDatasets } from "./Service";
+import type { InsightDataset } from "../../src/controller/IInsightFacade.ts";
 import { InsightDatasetKind } from "../../src/controller/IInsightFacade.ts";
+import Graph1 from "../../frontend/src/components/Graph1.tsx";
+import Graph2 from "../../frontend/src/components/Graph2.tsx";
+import Graph3 from "../../frontend/src/components/Graph3.tsx";
+import Graph4 from "../../frontend/src/components/Graph4.tsx";
+import Graph5 from "../../frontend/src/components/Graph5.tsx";
 
 ChartJS.register(CategoryScale);
 
@@ -123,7 +127,7 @@ function App() {
 		);
 	};
 
-	type Query = 1 | 2 | 3 | 4;
+	type Query = 1 | 2 | 3 | 4 | 5;
 
 	const Graphs = (props: { dataset: InsightDataset }) => {
 		const [query, setQuery] = useState<Query | null>(null);
@@ -168,6 +172,8 @@ function App() {
 						<MenuItem value={1}>Gregor</MenuItem>
 						<MenuItem value={2}>Find Courses With Average Exceeding Grade Threshold by Department</MenuItem>
 						<MenuItem value={3}>Compare Averages of a Course by Instructor</MenuItem>
+						<MenuItem value={4}>Is Computer Science Getting Oversaturated?</MenuItem>
+						<MenuItem value={5}>Are We Getting Dumber Each Year?</MenuItem>
 					</Select>
 				</FormControl>
 				{query === 1 ? (
@@ -176,496 +182,15 @@ function App() {
 					<Graph2 dataset={props.dataset} />
 				) : query === 3 ? (
 					<Graph3 dataset={props.dataset} />
+				) : query === 4 ? (
+					<Graph4 dataset={props.dataset} />
+				) : query === 5 ? (
+					<Graph5 dataset={props.dataset} />
 				) : (
 					<></>
 				)}
 			</>
 		);
-	};
-
-	const Graph1 = (props: { dataset: InsightDataset }) => {
-		const id = props.dataset.id;
-		const [data, setData] = useState<{ year: number; avg: number }[]>([]);
-
-		const getCourses = async () => {
-			const query = await gregorQuery(id);
-
-			if (query!.length !== 0) {
-				setData(
-					query!.map((x) => ({
-						year: x[id + "_year"] as number,
-						avg: x.avgMark as number,
-					}))
-				);
-			} else {
-				setData([]);
-			}
-		};
-
-		useEffect(() => {
-			getCourses();
-		}, [props.dataset, props.dataset.id]);
-
-		return (
-			<Bar
-				data={{
-					labels: data.map((x) => x.year),
-					datasets: [
-						{
-							label: "CPSC 110 Average of All Sections Taught By GREGOR",
-							data: data.map((x) => x.avg),
-							backgroundColor: "#646cff",
-							borderColor: "lightgray",
-						},
-					],
-				}}
-				options={{
-					responsive: true,
-					scales: {
-						x: {
-							title: {
-								display: true,
-								text: "Years that GREGOR taught",
-								color: "gray",
-								font: { size: 16 },
-							},
-							grid: {
-								color: "gray", // grid line color
-							},
-							ticks: {
-								color: "gray",
-								autoSkip: false,
-								maxRotation: 90,
-								minRotation: 0,
-							},
-						},
-						y: {
-							title: {
-								display: true,
-								text: "Average Grade in %",
-								color: "gray",
-								font: { size: 14 },
-							},
-							grid: {
-								color: "gray",
-							},
-							ticks: {
-								color: "gray",
-							},
-						},
-					},
-				}}
-			/>
-		);
-	};
-
-	const gregorQuery = async (id: string): Promise<InsightResult[] | undefined> => {
-		try {
-			return await postQuery({
-				WHERE: {
-					AND: [
-						{
-							IS: {
-								[id + "_instructor"]: "*kiczales*",
-							},
-						},
-						{
-							IS: {
-								[id + "_dept"]: "cpsc",
-							},
-						},
-						{
-							IS: {
-								[id + "_id"]: "110",
-							},
-						},
-					],
-				},
-				OPTIONS: {
-					COLUMNS: [id + "_year", "avgMark"],
-					ORDER: {
-						dir: "UP",
-						keys: [id + "_year"],
-					},
-				},
-				TRANSFORMATIONS: {
-					GROUP: [id + "_year"],
-					APPLY: [
-						{
-							avgMark: {
-								AVG: id + "_avg",
-							},
-						},
-					],
-				},
-			});
-		} catch (e) {
-			console.error((e as any)?.message ?? e);
-			return undefined;
-		}
-	};
-
-	const Graph2 = (props: { dataset: InsightDataset }) => {
-		const id = props.dataset.id;
-		const [data, setData] = useState<{ dept: string; id: string; avgMark: number }[]>([]);
-		const [dept, setDept] = useState<string>("");
-		const [avg, setAvg] = useState<number>(100);
-
-		const getCourses = async () => {
-			const query = await findDeptGpaBooster(id, dept);
-
-			if (query!.length !== 0) {
-				setData(
-					query!
-						.filter((x) => Number(x.avgMark) > avg)
-						.map((x) => ({
-							dept: x[id + "_dept"] as string,
-							id: x[id + "_id"] as string,
-							avgMark: x.avgMark as number,
-						}))
-				);
-			} else {
-				setData([]);
-			}
-		};
-
-		useEffect(() => {
-			getCourses();
-		}, [props.dataset, props.dataset.id, dept, avg]);
-
-		return (
-			<>
-				<Grid>
-					<TextField
-						sx={{
-							backgroundColor: "transparent",
-							// label color
-							"& .MuiInputLabel-root": {
-								color: "gray",
-							},
-							"& .MuiInputLabel-root.Mui-focused": {
-								color: "#646cff",
-							},
-
-							// actual input background
-							"& .MuiOutlinedInput-root": {
-								backgroundColor: "black",
-								color: "gray",
-
-								// default border
-								"& .MuiOutlinedInput-notchedOutline": {
-									borderColor: "gray",
-								},
-
-								// hover border
-								"&:hover .MuiOutlinedInput-notchedOutline": {
-									borderColor: "#646cff",
-								},
-
-								// focused border
-								"&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-									borderColor: "#646cff",
-								},
-							},
-
-							// helper text color (e.g. "e.g. CPSC 110")
-							"& .MuiFormHelperText-root": {
-								color: "gray",
-							},
-							mx: 3,
-						}}
-						label={"Enter Course Code:"}
-						helperText={"e.g. CPSC"}
-						onChange={(e) => setDept(e.target.value)}
-					/>
-					<TextField
-						sx={{
-							backgroundColor: "transparent",
-							// label color
-							"& .MuiInputLabel-root": {
-								color: "gray",
-							},
-							"& .MuiInputLabel-root.Mui-focused": {
-								color: "#646cff",
-							},
-
-							// actual input background
-							"& .MuiOutlinedInput-root": {
-								backgroundColor: "black",
-								color: "gray",
-
-								// default border
-								"& .MuiOutlinedInput-notchedOutline": {
-									borderColor: "gray",
-								},
-
-								// hover border
-								"&:hover .MuiOutlinedInput-notchedOutline": {
-									borderColor: "#646cff",
-								},
-
-								// focused border
-								"&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-									borderColor: "#646cff",
-								},
-							},
-
-							// helper text color (e.g. "e.g. CPSC 110")
-							"& .MuiFormHelperText-root": {
-								color: "gray",
-							},
-							mx: 3,
-						}}
-						label={"Enter Grade in %:"}
-						helperText={"e.g. 67"}
-						onChange={(e) => setAvg(Number(e.target.value))}
-					/>
-				</Grid>
-				<Bar
-					data={{
-						labels: data.map((x) => x.dept + " " + x.id),
-						datasets: [
-							{
-								label: "Course Average of All Sections",
-								data: data.map((x) => x.avgMark),
-								backgroundColor: "#646cff",
-								borderColor: "lightgray",
-							},
-						],
-					}}
-					options={{
-						responsive: true,
-						scales: {
-							x: {
-								title: {
-									display: true,
-									text: "Course Code and Number",
-									color: "gray",
-									font: { size: 16 },
-								},
-								grid: {
-									color: "gray", // grid line color
-								},
-								ticks: {
-									color: "gray",
-									autoSkip: false,
-									maxRotation: 90,
-									minRotation: 0,
-								},
-							},
-							y: {
-								title: {
-									display: true,
-									text: "Average Grade in %",
-									color: "gray",
-									font: { size: 14 },
-								},
-								grid: {
-									color: "gray",
-								},
-								ticks: {
-									color: "gray",
-								},
-							},
-						},
-					}}
-				/>
-			</>
-		);
-	};
-
-	const findDeptGpaBooster = async (id: string, dept: string): Promise<InsightResult[] | undefined> => {
-		try {
-			return await postQuery({
-				WHERE: {
-					IS: {
-						[id + "_dept"]: dept,
-					},
-				},
-				OPTIONS: {
-					COLUMNS: [id + "_dept", id + "_id", "avgMark"],
-					ORDER: {
-						dir: "DOWN",
-						keys: ["avgMark"],
-					},
-				},
-				TRANSFORMATIONS: {
-					GROUP: [id + "_dept", id + "_id"],
-					APPLY: [
-						{
-							avgMark: { AVG: id + "_avg" },
-						},
-					],
-				},
-			});
-		} catch (e) {
-			console.error((e as any)?.message ?? e);
-			return undefined;
-		}
-	};
-
-	const Graph3 = (props: { dataset: InsightDataset }) => {
-		const id = props.dataset.id;
-		const [data, setData] = useState<{ instructor: string; avg: number }[]>([]);
-		const [course, setCourse] = useState<string>("");
-
-		const getCourses = async () => {
-			const query = await getCourseAvgsByProf(id, course);
-			if (query!.length !== 0) {
-				setData(
-					query!
-						.map((x) => ({
-							instructor: x[id + "_instructor"] as string,
-							avg: x.avgMark as number,
-						}))
-						.filter((x) => x.instructor !== "")
-				);
-			} else {
-				setData([]);
-			}
-		};
-
-		useEffect(() => {
-			getCourses();
-		}, [props.dataset, props.dataset.id, course]);
-
-		return (
-			<>
-				<TextField
-					sx={{
-						backgroundColor: "transparent",
-						// label color
-						"& .MuiInputLabel-root": {
-							color: "gray",
-						},
-						"& .MuiInputLabel-root.Mui-focused": {
-							color: "#646cff",
-						},
-
-						// actual input background
-						"& .MuiOutlinedInput-root": {
-							backgroundColor: "black",
-							color: "gray",
-
-							// default border
-							"& .MuiOutlinedInput-notchedOutline": {
-								borderColor: "gray",
-							},
-
-							// hover border
-							"&:hover .MuiOutlinedInput-notchedOutline": {
-								borderColor: "#646cff",
-							},
-
-							// focused border
-							"&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-								borderColor: "#646cff",
-							},
-						},
-
-						// helper text color (e.g. "e.g. CPSC 110")
-						"& .MuiFormHelperText-root": {
-							color: "gray",
-						},
-					}}
-					label={"Enter a Course:"}
-					helperText={"e.g. CPSC 110"}
-					onChange={(e) => setCourse(e.target.value)}
-				/>
-				<Bar
-					data={{
-						labels: data.map((x) => x.instructor),
-						datasets: [
-							{
-								label: "Course Average of All Sections Taught by The Instructor",
-								data: data.map((x) => x.avg),
-								backgroundColor: "#646cff",
-								borderColor: "lightgray",
-							},
-						],
-					}}
-					options={{
-						responsive: true,
-						scales: {
-							x: {
-								title: {
-									display: true,
-									text: "Instructor",
-									color: "gray",
-									font: { size: 16 },
-								},
-								grid: {
-									color: "gray", // grid line color
-								},
-								ticks: {
-									color: "gray",
-									autoSkip: false,
-									maxRotation: 90,
-									minRotation: 0,
-								},
-							},
-							y: {
-								title: {
-									display: true,
-									text: "Average Grade in %",
-									color: "gray",
-									font: { size: 14 },
-								},
-								grid: {
-									color: "gray",
-								},
-								ticks: {
-									color: "gray",
-								},
-							},
-						},
-					}}
-				/>
-			</>
-		);
-	};
-
-	const getCourseAvgsByProf = async (id: string, course: string): Promise<InsightResult[] | undefined> => {
-		const [dept, num] = course.trim().toLowerCase().split(" ");
-
-		try {
-			return await postQuery({
-				WHERE: {
-					AND: [
-						{
-							IS: {
-								[id + "_id"]: num,
-							},
-						},
-						{
-							IS: {
-								[id + "_dept"]: dept,
-							},
-						},
-					],
-				},
-				OPTIONS: {
-					COLUMNS: [id + "_id", id + "_dept", "avgMark", id + "_instructor"],
-					ORDER: {
-						dir: "DOWN",
-						keys: ["avgMark"],
-					},
-				},
-				TRANSFORMATIONS: {
-					GROUP: [id + "_id", id + "_dept", id + "_instructor"],
-					APPLY: [
-						{
-							avgMark: {
-								AVG: id + "_avg",
-							},
-						},
-					],
-				},
-			});
-		} catch (e) {
-			console.error((e as any)?.message ?? e);
-			return undefined;
-		}
 	};
 
 	return (
@@ -757,7 +282,10 @@ function App() {
 											</div>
 											<button
 												className="remove-button"
-												onClick={() => handleRemoveDataset(dataset.id)}
+												onClick={(e) => {
+													e.stopPropagation();
+													handleRemoveDataset(dataset.id);
+												}}
 												disabled={datasetLoading}
 											>
 												Remove

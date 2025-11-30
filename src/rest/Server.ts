@@ -4,12 +4,7 @@ import express, { Application, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import * as http from "http";
 
-import {
-	InsightDatasetKind,
-	InsightDataset,
-	NotFoundError,
-	InsightError
-} from "../controller/IInsightFacade";
+import { InsightDatasetKind, InsightDataset, NotFoundError, InsightError } from "../controller/IInsightFacade";
 import InsightFacade from "../controller/InsightFacade";
 
 export default class Server {
@@ -19,7 +14,7 @@ export default class Server {
 	private facade: InsightFacade;
 
 	constructor(port: number) {
-		Log.info('Initiated server on port ' + port);
+		Log.info("Initiated server on port " + port);
 		this.port = port;
 		this.express = express();
 		this.facade = new InsightFacade();
@@ -51,13 +46,15 @@ export default class Server {
 				Log.error("Server.start() - server already started");
 				reject();
 			} else {
-				this.server = this.express.listen(this.port, () => {
-					Log.info("Server.start() - server started on port: " + this.port);
-					resolve();
-				}).on("error", (err: Error) => {
-					Log.error("Server.start() - server ERROR: "+ err.message);
-					reject(err);
-				});
+				this.server = this.express
+					.listen(this.port, () => {
+						Log.info("Server.start() - server started on port: " + this.port);
+						resolve();
+					})
+					.on("error", (err: Error) => {
+						Log.error("Server.start() - server ERROR: " + err.message);
+						reject(err);
+					});
 			}
 		});
 	}
@@ -85,21 +82,21 @@ export default class Server {
 		try {
 			const content: string = req.body.toString("base64");
 			const response = await this.facade.addDataset(req.params.id, content, req.params.kind as InsightDatasetKind);
-			res.status(StatusCodes.OK).json({result: response});
+			res.status(StatusCodes.OK).json({ result: response });
 		} catch (err) {
-			res.status(StatusCodes.BAD_REQUEST).json({error: (err as any)?.message ?? err});
+			res.status(StatusCodes.BAD_REQUEST).json({ error: (err as any)?.message ?? err });
 		}
 	}
 
 	private async deleteDataset(req: Request, res: Response): Promise<void> {
 		try {
 			const response = await this.facade.removeDataset(req.params.id);
-			res.status(StatusCodes.OK).json({result: response});
+			res.status(StatusCodes.OK).json({ result: response });
 		} catch (err) {
 			if (err instanceof NotFoundError) {
-				res.status(StatusCodes.NOT_FOUND).json({error: (err as any)?.message ?? err});
+				res.status(StatusCodes.NOT_FOUND).json({ error: (err as any)?.message ?? err });
 			} else {
-				res.status(StatusCodes.BAD_REQUEST).json({error: (err as any)?.message ?? err});
+				res.status(StatusCodes.BAD_REQUEST).json({ error: (err as any)?.message ?? err });
 			}
 		}
 	}
@@ -107,18 +104,18 @@ export default class Server {
 	private async getDatasets(_req: Request, res: Response): Promise<void> {
 		try {
 			const response: InsightDataset[] = await this.facade.listDatasets();
-			res.status(StatusCodes.OK).json({result: response});
+			res.status(StatusCodes.OK).json({ result: response });
 		} catch (err) {
-			res.status(StatusCodes.BAD_REQUEST).json({error: (err as any)?.message ?? err});
+			res.status(StatusCodes.BAD_REQUEST).json({ error: (err as any)?.message ?? err });
 		}
 	}
 
 	private async postQuery(req: Request, res: Response): Promise<void> {
 		try {
 			const response = await this.facade.performQuery(req.body);
-			res.status(StatusCodes.OK).json({result: response});
+			res.status(StatusCodes.OK).json({ result: response });
 		} catch (err) {
-			res.status(StatusCodes.BAD_REQUEST).json({error: (err as any)?.message ?? err});
+			res.status(StatusCodes.BAD_REQUEST).json({ error: (err as any)?.message ?? err });
 		}
 	}
 }
