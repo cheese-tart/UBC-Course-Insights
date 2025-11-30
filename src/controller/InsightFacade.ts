@@ -15,18 +15,16 @@ import { QueryEngine } from "./Query";
  *
  */
 export default class InsightFacade implements IInsightFacade {
-	private data: DatasetPersistence;
+	private readonly data: DatasetPersistence;
 
 	constructor() {
 		this.data = new DatasetPersistence();
 	}
 
-	// returns true if invalid id
 	private static checkId(id: string): boolean {
 		return !id || id.trim() === "" || id.includes("_");
 	}
 
-	// returns true if content is invalid
 	private static checkContent(s: string): boolean {
 		if (!s || s.trim() === "") {
 			return true;

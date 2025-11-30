@@ -82,25 +82,21 @@ export class DatasetPersistence {
 	}
 
 	public async loadData(): Promise<void> {
-		// If already loaded, return immediately
 		if (this.dataLoaded) {
 			return;
 		}
 
-		// If a load is already in progress, wait for it
 		if (this.loadingPromise) {
 			await this.loadingPromise;
 			return;
 		}
 
-		// Start loading - create promise and assign immediately to prevent race conditions
 		const promise = this._doLoadData();
 		this.loadingPromise = promise;
 
 		try {
 			await promise;
 		} finally {
-			// Clear the promise after loading completes (or fails)
 			this.loadingPromise = null;
 		}
 	}
@@ -108,14 +104,12 @@ export class DatasetPersistence {
 	private async _doLoadData(): Promise<void> {
 		await DatasetPersistence.ensurePersistence();
 
-		// Double-check after awaiting (another call might have loaded it)
 		if (this.dataLoaded) {
 			return;
 		}
 
 		try {
 			const data = await fs.readJson(file);
-			// Only set if we successfully read valid data (array)
 			if (Array.isArray(data)) {
 				this.datasets = data;
 			} else {
@@ -123,7 +117,6 @@ export class DatasetPersistence {
 			}
 			this.dataLoaded = true;
 		} catch (error) {
-			// File doesn't exist or is invalid - use empty array (expected on first run)
 			this.datasets = [];
 			this.dataLoaded = true;
 		}
@@ -134,8 +127,7 @@ export class DatasetPersistence {
 			await DatasetPersistence.ensurePersistence();
 			await fs.writeJson(file, this.datasets, { spaces: 0 });
 		} catch (error) {
-			// Silently fail - save errors shouldn't break the API
-			// Data remains in memory for the current session
+			// nothing
 		}
 	}
 
@@ -190,8 +182,6 @@ export class SectionMapper {
 }
 
 export class SectionsDataProcessor {
-	private static cache: Map<string, Section[]> = new Map();
-
 	private static extractCourseFiles(unzipped: JSZip): JSZipObject[] {
 		return Object.values(unzipped.files).filter((file) => !file.dir && file.name.startsWith("courses/"));
 	}
@@ -231,24 +221,10 @@ export class SectionsDataProcessor {
 	}
 
 	public static async getSections(content: string): Promise<any> {
-		// Check cache first
-		if (SectionsDataProcessor.cache.has(content)) {
-			return SectionsDataProcessor.cache.get(content)!;
-		}
-
-		// Process the content
 		const unzipped = await FileUnzipper.unzipData(content);
 		const files = SectionsDataProcessor.extractCourseFiles(unzipped);
 		const sections = await SectionsDataProcessor.processSectionFiles(files);
-		const validatedSections = SectionsDataProcessor.validateSections(sections);
-
-		// Cache the result
-		SectionsDataProcessor.cache.set(content, validatedSections);
-		return validatedSections;
-	}
-
-	public static clearCache(): void {
-		SectionsDataProcessor.cache.clear();
+		return SectionsDataProcessor.validateSections(sections);
 	}
 }
 
@@ -499,22 +475,15 @@ export class RoomsDataProcessor {
 	}
 
 	public static async getRooms(content: string): Promise<Room[]> {
-		// Check cache first
 		if (RoomsDataProcessor.cache.has(content)) {
 			return RoomsDataProcessor.cache.get(content)!;
 		}
 
-		// Process the content
 		const unzipped = await FileUnzipper.unzipData(content);
 		const buildings = await RoomsDataProcessor.processBuildingFiles(unzipped);
 		const rooms = await RoomsDataProcessor.processRoomFiles(buildings, unzipped);
 
-		// Cache the result
 		RoomsDataProcessor.cache.set(content, rooms);
 		return rooms;
-	}
-
-	public static clearCache(): void {
-		RoomsDataProcessor.cache.clear();
 	}
 }
