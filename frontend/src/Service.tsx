@@ -7,9 +7,9 @@ export async function putDataset(id: string, kind: string, file: File): Promise<
 		const res = await fetch(`${BASE_URL}/dataset/${id}/${kind}`, {
 			method: "PUT",
 			headers: {
-				"Content-Type": "application/zip"
+				"Content-Type": "application/zip",
 			},
-			body: await file.arrayBuffer()
+			body: await file.arrayBuffer(),
 		});
 
 		if (!res.ok) {
@@ -30,8 +30,10 @@ export async function putDataset(id: string, kind: string, file: File): Promise<
 		}
 		return json.result as string[];
 	} catch (err) {
-		if (err instanceof TypeError && err.message.includes('fetch')) {
-			throw new Error(`Cannot connect to backend server at ${BASE_URL}. Please ensure the backend server is running on port 50067.`);
+		if (err instanceof TypeError && err.message.includes("fetch")) {
+			throw new Error(
+				`Cannot connect to backend server at ${BASE_URL}. Please ensure the backend server is running on port 50067.`
+			);
 		}
 		throw err;
 	}
@@ -39,7 +41,7 @@ export async function putDataset(id: string, kind: string, file: File): Promise<
 
 export async function deleteDataset(id: string): Promise<string> {
 	const res = await fetch(`${BASE_URL}/dataset/` + id, {
-		method: `DELETE`
+		method: `DELETE`,
 	});
 
 	const json = await res.json();
@@ -55,7 +57,7 @@ export async function deleteDataset(id: string): Promise<string> {
 export async function requestDatasets(): Promise<InsightDataset[]> {
 	try {
 		const res = await fetch(`${BASE_URL}/datasets`, {
-			method: `GET`
+			method: `GET`,
 		});
 
 		if (!res.ok) {
@@ -77,8 +79,10 @@ export async function requestDatasets(): Promise<InsightDataset[]> {
 
 		return json.result as InsightDataset[];
 	} catch (err) {
-		if (err instanceof TypeError && err.message.includes('fetch')) {
-			throw new Error(`Cannot connect to backend server at ${BASE_URL}. Please ensure the backend server is running on port 50067.`);
+		if (err instanceof TypeError && err.message.includes("fetch")) {
+			throw new Error(
+				`Cannot connect to backend server at ${BASE_URL}. Please ensure the backend server is running on port 50067.`
+			);
 		}
 		throw err;
 	}
@@ -88,9 +92,9 @@ export async function postQuery(query: unknown): Promise<InsightResult[]> {
 	const res = await fetch(`${BASE_URL}/query`, {
 		method: `POST`,
 		headers: {
-			"Content-Type": "application/json"
+			"Content-Type": "application/json",
 		},
-		body: JSON.stringify(query)
+		body: JSON.stringify(query),
 	});
 
 	const json = await res.json();
