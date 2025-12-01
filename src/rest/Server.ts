@@ -48,13 +48,11 @@ export default class Server {
 			} else {
 				this.server = this.express
 					.listen(this.port, () => {
-
-						Log.info();
+						Log.info("Server.start() - started");
 						resolve();
 					})
 					.on("error", (err: Error) => {
-						Log.error();
-
+						Log.error("Server.start() - ERROR");
 						reject(err);
 					});
 			}
@@ -82,15 +80,14 @@ export default class Server {
 
 	// CRUD Operations
 	private async putDataset(req: Request, res: Response): Promise<void> {
+		if (req.params.kind !== InsightDatasetKind.Rooms && req.params.kind !== InsightDatasetKind.Sections) {
+			throw new InsightError("Invalid dataset kind");
+		}
 		try {
-			if (req.params.kind !== InsightDatasetKind.Rooms && req.params.kind !== InsightDatasetKind.Sections) {
-				throw new InsightError("Invalid dataset kind");
-			}
 			const content: string = req.body.toString("base64");
 			const response = await this.facade.addDataset(req.params.id, content, req.params.kind as InsightDatasetKind);
 			res.status(StatusCodes.OK).json({ result: response });
 		} catch (err) {
-			Log.error();
 			res.status(StatusCodes.BAD_REQUEST).json({ error: (err as any)?.message ?? err });
 		}
 	}
@@ -122,7 +119,6 @@ export default class Server {
 			const response = await this.facade.performQuery(req.body);
 			res.status(StatusCodes.OK).json({ result: response });
 		} catch (err) {
-			Log.error();
 			res.status(StatusCodes.BAD_REQUEST).json({ error: (err as any)?.message ?? err });
 		}
 	}

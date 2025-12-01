@@ -28,8 +28,7 @@ export class App {
 		return server
 			.start()
 			.then(() => {
-
-				Log.info();
+				Log.info(`App.initServer(${port}) - started`);
 			})
 			.catch((err: Error) => {
 				Log.error(err);
