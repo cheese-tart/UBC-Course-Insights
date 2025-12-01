@@ -1,5 +1,5 @@
 # UBC Course Insights
-> A full-stack TypeScript application for analyzing course data across UBC Vancouver's campus, processing 64,000+ academic records through a RESTful API architecture.
+> A full-stack TypeScript web application for analyzing course data across the UBC Vancouver campus, processing 64,000+ academic records through a RESTful API architecture.
 
 ## Core Features
 - **High-Performance Data Processing**: Engineered scalable asynchronous pipelines handling 64K+ course sections with sub-second query responses
@@ -55,7 +55,7 @@ cd frontend
 # Install dependencies
 npm install
 
-# Start frontend
+# Start React client
 npm run dev
 ```
 
