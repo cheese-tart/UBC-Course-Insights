@@ -5,14 +5,16 @@ import fs from "fs";
 const envVars = loadEnvFile(".env");
 export function loadEnvFile(filePath: string) {
 	if (fs.existsSync(filePath)) {
-		return fs
-			.readFileSync(filePath, "utf8")
-			.split("\n")
-			.reduce((acc: Record<string, any>, line: string) => {
-				const [key, value] = line.split("=");
-				acc[key] = value;
-				return acc;
-			}, {});
+		const envFile = fs.readFileSync(filePath, "utf8");
+
+		const envVars = envFile.split("\n").reduce((acc: Record<string, any>, line: string) => {
+			const [key, value] = line.split("=");
+			acc[key] = value;
+			return acc;
+		}, {});
+
+		return envVars;
+
 	} else {
 		console.error(`.env file not found at ${filePath}`);
 		return {};
@@ -26,10 +28,12 @@ export class App {
 		return server
 			.start()
 			.then(() => {
-				Log.info(`App.initServer(${port}) - started`);
+
+				Log.info();
 			})
 			.catch((err: Error) => {
-				Log.error(`App.initServer(${port}) - ERROR: ${err.message}`);
+				Log.error(err);
+
 			});
 	}
 }
