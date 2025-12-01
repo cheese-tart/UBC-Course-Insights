@@ -66,7 +66,7 @@ test
 ├── controller/
 ├── rest/
 └── resources/
-    ├── queries
+    ├── queries/
     └── archives/
     	└── find datasets to play with here ;)
 ```
