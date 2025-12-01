@@ -14,6 +14,7 @@ export function loadEnvFile(filePath: string) {
 		}, {});
 
 		return envVars;
+
 	} else {
 		console.error(`.env file not found at ${filePath}`);
 		return {};
@@ -22,15 +23,17 @@ export function loadEnvFile(filePath: string) {
 
 export class App {
 	public async initServer(port: number): Promise<void> {
-		Log.info();
+		Log.info(`App.initServer(${port}) - start`);
 		const server = new Server(port);
 		return server
 			.start()
 			.then(() => {
+
 				Log.info();
 			})
 			.catch((err: Error) => {
 				Log.error(err);
+
 			});
 	}
 }

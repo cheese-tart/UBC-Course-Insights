@@ -14,7 +14,7 @@ export default class Server {
 	private facade: InsightFacade;
 
 	constructor(port: number) {
-		Log.info();
+		Log.info("Initiated server on port " + port);
 		this.port = port;
 		this.express = express();
 		this.facade = new InsightFacade();
@@ -41,18 +41,20 @@ export default class Server {
 
 	public async start(): Promise<void> {
 		return new Promise((resolve, reject) => {
-			Log.info();
+			Log.info("Server.start() - start");
 			if (this.server) {
-				Log.error();
+				Log.error("Server.start() - server already started");
 				reject();
 			} else {
 				this.server = this.express
 					.listen(this.port, () => {
+
 						Log.info();
 						resolve();
 					})
 					.on("error", (err: Error) => {
 						Log.error();
+
 						reject(err);
 					});
 			}
@@ -60,14 +62,14 @@ export default class Server {
 	}
 
 	public async stop(): Promise<void> {
-		Log.info();
+		Log.info("Server.stop() - stop");
 		return new Promise((resolve, reject) => {
 			if (!this.server) {
-				Log.error();
+				Log.error("Server.stop() - ERROR: server already stopped");
 				reject();
 			} else {
 				this.server.close(() => {
-					Log.info();
+					Log.info("Server.stop() - stopped");
 					resolve();
 				});
 			}
@@ -95,7 +97,6 @@ export default class Server {
 
 	private async deleteDataset(req: Request, res: Response): Promise<void> {
 		try {
-			Log.info();
 			const response = await this.facade.removeDataset(req.params.id);
 			res.status(StatusCodes.OK).json({ result: response });
 		} catch (err) {
@@ -109,7 +110,6 @@ export default class Server {
 
 	private async getDatasets(_req: Request, res: Response): Promise<void> {
 		try {
-			Log.info();
 			const response: InsightDataset[] = await this.facade.listDatasets();
 			res.status(StatusCodes.OK).json({ result: response });
 		} catch (err) {
@@ -119,7 +119,6 @@ export default class Server {
 
 	private async postQuery(req: Request, res: Response): Promise<void> {
 		try {
-			Log.info();
 			const response = await this.facade.performQuery(req.body);
 			res.status(StatusCodes.OK).json({ result: response });
 		} catch (err) {
