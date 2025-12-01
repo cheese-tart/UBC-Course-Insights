@@ -9,7 +9,7 @@ import InsightFacade from "../controller/InsightFacade";
 
 export default class Server {
 	private readonly port: number;
-	private express: Application;
+	private readonly express: Application;
 	private server: http.Server | undefined;
 	private facade: InsightFacade;
 
