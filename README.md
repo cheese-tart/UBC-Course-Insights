@@ -52,9 +52,13 @@ npm start
 # Navigate to frontend
 cd frontend
 
+# Install dependencies
+npm install
+
 # Start frontend
 npm run dev
 ```
+
 ## A little tip
 ```
 test
@@ -66,5 +70,6 @@ test
     └── archives/
     	└── find datasets to play with here ;)
 ```
+
 ## Contributing
 Feel free to submit issues or pull requests to improve this project (e.g. query ideas). Contributions are always welcome!
