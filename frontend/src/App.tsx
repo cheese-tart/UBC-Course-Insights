@@ -127,6 +127,10 @@ function App() {
 		);
 	};
 
+	// TODO: add these queries:
+	// 1. Find number of courses with average above grade threshold by department
+	// 2. Find total enrollment across all courses in a department by year
+	// 3. Find average grade across all courses in a department by year
 	type Query = 1 | 2 | 3 | 4 | 5;
 
 	const Graphs = (props: { dataset: InsightDataset }) => {

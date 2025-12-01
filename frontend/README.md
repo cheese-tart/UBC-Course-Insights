@@ -1,4 +1,8 @@
-# React + TypeScript + Vite
+# Frontend demo video
+
+https://www.youtube.com/watch?v=VxBx_aNNhh8
+
+## React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
