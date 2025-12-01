@@ -7,14 +7,11 @@ export function loadEnvFile(filePath: string) {
 	if (fs.existsSync(filePath)) {
 		const envFile = fs.readFileSync(filePath, "utf8");
 
-		const envVars = envFile.split("\n").reduce((acc: Record<string, any>, line: string) => {
+		return envFile.split("\n").reduce((acc: Record<string, any>, line: string) => {
 			const [key, value] = line.split("=");
 			acc[key] = value;
 			return acc;
 		}, {});
-
-		return envVars;
-
 	} else {
 		console.error(`.env file not found at ${filePath}`);
 		return {};
@@ -28,12 +25,10 @@ export class App {
 		return server
 			.start()
 			.then(() => {
-
-				Log.info();
+				Log.info(`App.initServer(${port}) - started`);
 			})
 			.catch((err: Error) => {
 				Log.error(err);
-
 			});
 	}
 }
