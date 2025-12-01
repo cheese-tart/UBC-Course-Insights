@@ -61,7 +61,7 @@ npm run dev
 
 ## A little tip
 ```
-test
+test/
 ├── TestUtil.js
 ├── controller/
 ├── rest/
